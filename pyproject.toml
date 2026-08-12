@@ -15,6 +15,8 @@ dependencies = [
     "pikepdf>=8.0",
     "pillow>=10.0",
     "img2pdf>=0.5",
+    "pypdfium2>=4.0",
+    "lingua-language-detector>=2.0",
 ]
 
 [project.optional-dependencies]

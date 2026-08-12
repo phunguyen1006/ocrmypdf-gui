@@ -20,10 +20,12 @@ def emit(event: dict[str, Any]) -> None:
     worker never crashes because of the event channel.
     """
     stream = EVENT_STREAM or sys.stdout
+    if stream is None:
+        return
     try:
         stream.write(json.dumps(event, ensure_ascii=False) + "\n")
         stream.flush()
-    except (OSError, ValueError):
+    except (AttributeError, OSError, TypeError, ValueError):
         pass
 
 

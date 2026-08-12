@@ -8,6 +8,7 @@ from pathlib import Path
 
 
 class LanguagePreset(str, Enum):
+    AUTO = "auto"
     VIETNAMESE = "vie"
     ENGLISH = "eng"
     VIETNAMESE_ENGLISH = "vie+eng"
@@ -53,7 +54,7 @@ class PageSelectionMode(str, Enum):
 class AppSettings:
     """Snapshot of user preferences. Persisted via QSettings."""
 
-    language_preset: str = LanguagePreset.VIETNAMESE_ENGLISH.value
+    language_preset: str = LanguagePreset.AUTO.value
     custom_languages: list[str] = field(default_factory=lambda: ["vie", "eng"])
     preset: str = OcrPreset.STANDARD.value
     rotate_pages: bool = True
@@ -79,6 +80,11 @@ class AppSettings:
     # required for rotate_pages/deskew to work in API mode. The GUI already
     # isolates OCR in its own worker process, so threads are safe here.
     run_in_threads: bool = True
+
+    # Language packs are downloaded lazily into the user-scoped tessdata
+    # cache. Existing settings files do not contain this key, so the default
+    # preserves compatibility with older JSON snapshots.
+    auto_download_languages: bool = True
 
     theme: str = "auto"
     lang_installed_cache: dict[str, bool] = field(default_factory=dict)
@@ -135,6 +141,7 @@ class AppSettings:
             "oversample",
             "sidecar",
             "run_in_threads",
+            "auto_download_languages",
         ):
             value = filtered.get(name, getattr(defaults, name))
             if isinstance(value, str):

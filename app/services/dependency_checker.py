@@ -60,14 +60,17 @@ class DependencyReport:
         return [self.ghostscript.name] if not self.ghostscript.present else []
 
 
-def _run_version(cmd: list[str], timeout: float = 15.0) -> str | None:
+def _run_version(cmd: list[str], timeout: float = 15.0, env: dict[str, str] | None = None) -> str | None:
     """Run a version command; return first version-looking line or None."""
     try:
         proc = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
+            env=env,
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
     except (OSError, subprocess.SubprocessError) as exc:
@@ -120,22 +123,25 @@ def _run_ocrmypdf_version() -> str | None:
         return None
 
 
-def _run_gs_version(exe: str) -> str | None:
-    return _run_version([exe, "--version"])
+def _run_gs_version(exe: str, env: dict[str, str] | None = None) -> str | None:
+    return _run_version([exe, "--version"], env=env)
 
 
-def _run_tesseract_version(exe: str) -> str | None:
-    return _run_version([exe, "--version"])
+def _run_tesseract_version(exe: str, env: dict[str, str] | None = None) -> str | None:
+    return _run_version([exe, "--version"], env=env)
 
 
-def list_languages(exe: str) -> list[str] | None:
+def list_languages(exe: str, env: dict[str, str] | None = None) -> list[str] | None:
     """Return installed tessdata language codes (eng, vie, ...)."""
     try:
         proc = subprocess.run(
             [exe, "--list-langs"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=20.0,
+            env=env,
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
     except (OSError, subprocess.SubprocessError) as exc:

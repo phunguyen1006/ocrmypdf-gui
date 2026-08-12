@@ -23,6 +23,8 @@ from app.utils.paths import make_work_dir, unique_output_path
 
 def languages_for_settings(settings: AppSettings) -> list[str]:
     """Resolve the language preset into a list of tessdata language codes."""
+    if settings.language_preset == LanguagePreset.AUTO.value:
+        raise ValueError("Auto detect must be resolved before OCR starts.")
     if settings.language_preset == LanguagePreset.CUSTOM.value:
         langs = [l.strip() for l in settings.custom_languages if l.strip()]
         return langs or ["eng"]

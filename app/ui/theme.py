@@ -185,6 +185,29 @@ QToolTip {{
     border: 1px solid {BORDER_STRONG};
     padding: 6px;
 }}
+QScrollArea#settingsScroll {{
+    background: {SURFACE};
+    border: 0;
+}}
+QScrollBar:vertical {{
+    width: 10px;
+    margin: 2px 0 2px 2px;
+    background: {SURFACE_SUBTLE};
+    border-radius: 5px;
+}}
+QScrollBar::handle:vertical {{
+    min-height: 32px;
+    background: #bdbdbd;
+    border-radius: 5px;
+}}
+QScrollBar::handle:vertical:hover {{
+    background: {INK_MUTED};
+}}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
+    height: 0;
+    background: transparent;
+}}
 QDockWidget {{
     font-weight: 700;
 }}

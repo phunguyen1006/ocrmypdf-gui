@@ -9,8 +9,8 @@ import sys
 import time
 from pathlib import Path
 
-from PySide6.QtCore import QSettings, Qt, QTimer
-from PySide6.QtGui import QAction, QCloseEvent
+from PySide6.QtCore import QSettings, Qt, QThread, QTimer
+from PySide6.QtGui import QAction, QCloseEvent, QIcon
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.core.queue_manager import QueueManager
+from app.core.language_workers import LanguageDownloadWorker, LanguageDetectionWorker
 from app.core.page_ranges import (
     parse_spec_to_pages,
     validate_spec,
@@ -39,17 +40,20 @@ from app.models.job import Job, JobStatus
 from app.models.settings import AppSettings, OcrPreset, SettingsStore
 from app.services import dependency_checker
 from app.services.history_service import HistoryService
+from app.services.language_detection_service import DocumentDetection, LanguageDetectionService
 from app.services.pdf_service import inspect_pdf
 from app.services.tesseract_service import TesseractService
 from app.ui.drop_zone import DropZone
 from app.ui.first_run_dialog import FirstRunDialog
 from app.ui.history_dialog import HistoryDialog
 from app.ui.job_widget import JobWidget
+from app.ui.language_dialog import LanguagePickerDialog, LanguageReviewDialog
 from app.ui.log_panel import LogPanel
 from app.ui.progress_panel import ProgressPanel
 from app.ui.settings_dialog import SettingsDialog
 from app.ui.theme import apply_monochrome_theme
 from app.utils.paths import long_path
+from app.utils.resources import resource_path
 
 log = logging.getLogger("app.main_window")
 
@@ -60,6 +64,7 @@ PRESET_LABELS = {
 }
 
 LANGUAGE_LABELS = {
+    "auto": "Auto detect — per page",
     "vie": "Vietnamese",
     "eng": "English",
     "vie+eng": "Vietnamese + English",
@@ -74,6 +79,9 @@ class MainWindow(QMainWindow):
         if app is not None:
             apply_monochrome_theme(app)
         self.setWindowTitle("OCRmyPDF GUI")
+        icon_path = resource_path("assets/ocrmypdf-gui.ico")
+        if icon_path.exists():
+            self.setWindowIcon(QIcon(str(icon_path)))
         self.setMinimumSize(760, 640)
         self.resize(940, 780)
 
@@ -81,6 +89,12 @@ class MainWindow(QMainWindow):
         self.settings: AppSettings = self.store.load()
         self.tesseract = TesseractService()
         self.history = history or HistoryService()
+        self._language_thread: QThread | None = None
+        self._language_worker = None
+        self._preflight_waiting: list[Job] = []
+        self._detected_results: dict[str, DocumentDetection] = {}
+        self._resolved_languages: dict[str, list[str]] = {}
+        self._preparing_languages = False
 
         self.queue = QueueManager(self)
         self.queue.set_concurrency(self.settings.concurrent_files)
@@ -190,6 +204,9 @@ class MainWindow(QMainWindow):
         self.lang_combo = QComboBox()
         self.lang_combo.setMinimumWidth(190)
         self.lang_combo.setAccessibleName("OCR language")
+        self.lang_combo.setToolTip(
+            "Auto detect checks each page locally. Custom... opens the searchable language catalogue."
+        )
         controls.addWidget(self.lang_combo, 1, 0)
 
         preset_label = QLabel("Preset")
@@ -260,29 +277,33 @@ class MainWindow(QMainWindow):
         self.lang_combo.blockSignals(True)
         self.lang_combo.clear()
         installed = set(self.tesseract.languages())
+        statuses = self.tesseract.statuses()
         choices: list[tuple[str, str]] = []
-        if "vie" in installed:
-            choices.append((LANGUAGE_LABELS["vie"], "vie"))
-        if "eng" in installed:
-            choices.append((LANGUAGE_LABELS["eng"], "eng"))
-        if {"vie", "eng"}.issubset(installed):
-            choices.insert(0, (LANGUAGE_LABELS["vie+eng"], "vie+eng"))
-        if installed:
-            choices.append((LANGUAGE_LABELS["custom"], "custom"))
-        else:
-            choices.append(("No Tesseract language packs found", ""))
+        choices.append((LANGUAGE_LABELS["auto"], "auto"))
+        choices.extend(
+            [
+                (LANGUAGE_LABELS["vie+eng"], "vie+eng"),
+                (LANGUAGE_LABELS["vie"], "vie"),
+                (LANGUAGE_LABELS["eng"], "eng"),
+            ]
+        )
+        preset_codes = {"vie+eng", "vie", "eng"}
+        models = self.tesseract.catalog_models()
+        preferred = {code: index for index, code in enumerate(("vie", "eng", "chi_sim", "chi_tra", "jpn", "kor"))}
+        models = sorted(models, key=lambda model: (preferred.get(model.code, 100), model.name.casefold()))
+        for model in models:
+            if model.code in preset_codes:
+                continue
+            choices.append((f"{model.name} ({model.code})  ·  {statuses.get(model.code, 'Available')}", model.code))
+        choices.append((LANGUAGE_LABELS["custom"], "custom"))
 
         for label, key in choices:
             self.lang_combo.addItem(label, key)
-        if not installed:
-            item = self.lang_combo.model().item(0)
-            if item is not None:
-                item.setEnabled(False)
 
         idx = self.lang_combo.findData(self.settings.language_preset)
         if idx < 0 or not self.lang_combo.itemData(idx):
-            for preferred in ("vie+eng", "vie", "eng"):
-                idx = self.lang_combo.findData(preferred)
+            for fallback in ("auto", "vie+eng", "vie", "eng"):
+                idx = self.lang_combo.findData(fallback)
                 if idx >= 0:
                     break
         self.lang_combo.setCurrentIndex(max(idx, 0))
@@ -485,34 +506,20 @@ class MainWindow(QMainWindow):
 
         self._snapshot_settings()
 
-        # Validate selected language is installed.
-        langs = self.tesseract.languages()
-        lang_key = self.lang_combo.currentData() or "vie+eng"
-        selected_languages = (
-            self.settings.custom_languages
-            if lang_key == "custom"
-            else [code for code in str(lang_key).split("+") if code]
-        )
-        missing = [language for language in selected_languages if language not in langs]
-        if missing:
-            QMessageBox.warning(
-                self,
-                "Language not installed",
-                "Missing Tesseract language:\n\n"
-                + "\n".join(missing)
-                + "\n\nInstall the language data to use this option.",
-            )
-            return
-
         waiting = [j for j in self.queue.jobs() if j.status == JobStatus.WAITING]
         if not waiting:
             QMessageBox.information(self, "Nothing to do", "Add PDF files to the queue first.")
             return
         self.queue.set_concurrency(self.settings.concurrent_files)
         self.store.save(self.settings)
-        self.queue.start()
+        self._begin_language_preflight(waiting)
 
     def _cancel(self) -> None:
+        if self._preparing_languages:
+            if self._language_worker is not None and hasattr(self._language_worker, "cancel"):
+                self._language_worker.cancel()
+            self._abort_language_preflight("Language preparation cancelled.")
+            return
         self.queue.cancel_current()
         self.cancel_btn.setEnabled(False)
         self.progress_panel.finish("Cancelling...")
@@ -641,35 +648,188 @@ class MainWindow(QMainWindow):
         if key != "custom":
             self.settings.language_preset = key
             return
-        langs = self.tesseract.languages()
-        if not langs:
-            QMessageBox.information(self, "No languages", "Tesseract has no language packs installed.")
-            self.lang_combo.setCurrentIndex(self.lang_combo.findData("eng"))
-            return
-        choices = sorted(langs)
-        from PySide6.QtWidgets import QDialogButtonBox, QListWidget
-
-        dialog = QDialog(self)
-        dialog.setWindowTitle("Choose OCR languages")
-        layout = QVBoxLayout(dialog)
-        list_widget = QListWidget()
-        list_widget.setSelectionMode(QListWidget.SelectionMode.MultiSelection)
-        current = set(self.settings.custom_languages)
-        for lang in choices:
-            item = QListWidgetItem(lang)
-            item.setSelected(lang in current)
-            list_widget.addItem(item)
-        layout.addWidget(list_widget)
-        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        buttons.accepted.connect(dialog.accept)
-        buttons.rejected.connect(dialog.reject)
-        layout.addWidget(buttons)
+        dialog = LanguagePickerDialog(self.tesseract, self.settings.custom_languages, self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            selected = [item.text() for item in list_widget.selectedItems()]
+            selected = dialog.selected_codes()
             if not selected:
-                selected = ["eng"]
+                QMessageBox.information(self, "Choose a language", "Select at least one OCR language model.")
+                self.lang_combo.setCurrentIndex(self.lang_combo.findData("auto"))
+                self.settings.language_preset = "auto"
+                return
             self.settings.custom_languages = selected
             self.settings.language_preset = "custom"
+
+    # ------------------------------------------------------- language setup
+
+    def _begin_language_preflight(self, waiting: list[Job]) -> None:
+        """Detect and/or download models before starting the OCR queue."""
+        self._preflight_waiting = list(waiting)
+        self._resolved_languages = {}
+        detection_jobs: list[tuple[str, Path, list[int] | None]] = []
+        manual_codes: set[str] = set()
+        for job in waiting:
+            settings = self._settings_for_job(job)
+            if settings.language_preset == "auto":
+                if job.pages == []:
+                    continue
+                detection_jobs.append((job.id, Path(job.input_path), job.pages))
+            else:
+                codes = settings.custom_languages if settings.language_preset == "custom" else settings.language_preset.split("+")
+                manual_codes.update(code for code in codes if code)
+
+        self._set_language_preparing(True, "Detecting languages locally…" if detection_jobs else "Preparing language models…")
+        if detection_jobs:
+            service = LanguageDetectionService(self.tesseract)
+            self._start_language_worker(
+                LanguageDetectionWorker(detection_jobs, service),
+                self._on_detection_finished,
+            )
+        else:
+            self._begin_language_download(manual_codes)
+
+    def _start_language_worker(self, worker, finished_handler) -> None:
+        thread = QThread(self)
+        worker.moveToThread(thread)
+        thread.started.connect(worker.run)
+        worker.finished.connect(finished_handler)
+        worker.finished.connect(thread.quit)
+        worker.failed.connect(self._on_language_failed)
+        worker.failed.connect(thread.quit)
+        worker.cancelled.connect(self._on_language_cancelled)
+        worker.cancelled.connect(thread.quit)
+        if isinstance(worker, LanguageDownloadWorker):
+            worker.progress.connect(self._on_download_progress)
+        else:
+            worker.progress.connect(self._on_detection_progress)
+        thread.finished.connect(worker.deleteLater)
+        thread.finished.connect(lambda current_thread=thread: self._on_language_thread_finished(current_thread))
+        self._language_thread = thread
+        self._language_worker = worker
+        thread.start()
+
+    def _on_language_thread_finished(self, thread: QThread) -> None:
+        if self._language_thread is thread:
+            self._language_worker = None
+            self._language_thread = None
+
+    def _on_detection_progress(self, current: int, total: int, message: str) -> None:
+        self.statusBar().showMessage(f"{message} ({current}/{total})")
+
+    def _on_detection_finished(self, results: dict[str, DocumentDetection]) -> None:
+        self._detected_results = results
+        manual_codes: set[str] = set()
+        try:
+            for job in self._preflight_waiting:
+                settings = self._settings_for_job(job)
+                if settings.language_preset != "auto":
+                    codes = settings.custom_languages if settings.language_preset == "custom" else settings.language_preset.split("+")
+                    manual_codes.update(code for code in codes if code)
+                    continue
+                detection = results.get(job.id)
+                if detection is None:
+                    raise RuntimeError(f"No detection result was returned for {Path(job.input_path).name}.")
+                codes = list(detection.languages)
+                if detection.needs_review:
+                    dialog = LanguageReviewDialog(Path(job.input_path).name, detection, self.tesseract, self)
+                    if dialog.exec() != QDialog.DialogCode.Accepted:
+                        self._abort_language_preflight("Language selection cancelled.")
+                        return
+                    codes = dialog.selected_codes()
+                if not codes:
+                    raise RuntimeError(f"No language was detected for {Path(job.input_path).name}.")
+                self._resolved_languages[job.id] = list(dict.fromkeys(codes))
+                manual_codes.update(codes)
+        except Exception as exc:  # noqa: BLE001 - keep the queue idle on preflight errors
+            self._on_language_failed(str(exc))
+            return
+        self._begin_language_download(manual_codes)
+
+    def _begin_language_download(self, codes: set[str]) -> None:
+        codes = {str(code).strip() for code in codes if str(code).strip()}
+        try:
+            missing = [code for code in sorted(codes) if self.tesseract.status(code) == "Available"]
+        except Exception as exc:  # noqa: BLE001 - invalid legacy settings must be recoverable
+            self._on_language_failed(f"Unknown OCR language selection: {exc}")
+            return
+        self._download_codes = list(codes)
+        if missing:
+            no_download = [
+                job for job in self._preflight_waiting
+                if not self._settings_for_job(job).auto_download_languages
+            ]
+            if no_download:
+                self._on_language_failed(
+                    "Missing language model(s): " + ", ".join(missing) + ". Enable automatic downloads in Advanced Settings."
+                )
+                return
+            self._set_language_preparing(True, f"Downloading {len(missing)} language model(s)…")
+            self._start_language_worker(
+                LanguageDownloadWorker(self.tesseract, missing),
+                self._on_download_finished,
+            )
+            return
+        self._finish_language_preflight()
+
+    def _on_download_progress(self, code: str, current: int, total: int) -> None:
+        if total:
+            self.statusBar().showMessage(f"Downloading {code}: {current / total:.0%}")
+        else:
+            self.statusBar().showMessage(f"Downloading {code}…")
+
+    def _on_download_finished(self, _paths) -> None:
+        self.tesseract.refresh()
+        self._finish_language_preflight()
+
+    def _finish_language_preflight(self) -> None:
+        for job in self._preflight_waiting:
+            codes = self._resolved_languages.get(job.id)
+            if not codes:
+                continue
+            settings = self._settings_for_job(job)
+            settings.language_preset = "custom"
+            settings.custom_languages = codes
+            job.settings_json = json.dumps(settings.to_dict(), ensure_ascii=False)
+        self._set_language_preparing(False, "Language models ready.")
+        self.store.save(self.settings)
+        self.queue.start()
+
+    def _set_language_preparing(self, preparing: bool, message: str = "") -> None:
+        self._preparing_languages = preparing
+        for widget in (self.start_btn, self.advanced_btn, self.lang_combo, self.preset_combo):
+            widget.setEnabled(not preparing)
+        self.cancel_btn.setEnabled(preparing)
+        if message:
+            self.statusBar().showMessage(message)
+
+    def _abort_language_preflight(self, message: str) -> None:
+        self._set_language_preparing(False, message)
+        self._preflight_waiting = []
+        self._resolved_languages = {}
+
+    def _on_language_cancelled(self) -> None:
+        self._abort_language_preflight("Language preparation cancelled.")
+
+    def _on_language_failed(self, message: str) -> None:
+        self._set_language_preparing(False)
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Icon.Warning)
+        box.setWindowTitle("Language preparation failed")
+        box.setText(message)
+        box.setInformativeText(
+            "OCR has not started. Check your network connection, or download the "
+            "matching .traineddata file manually into the app tessdata cache and retry."
+        )
+        retry = box.addButton("Retry", QMessageBox.ButtonRole.AcceptRole)
+        box.addButton(QMessageBox.StandardButton.Cancel)
+        box.exec()
+        if box.clickedButton() is retry:
+            self._begin_language_preflight(self._preflight_waiting)
+
+    def _settings_for_job(self, job: Job) -> AppSettings:
+        try:
+            return AppSettings.from_dict(json.loads(job.settings_json))
+        except (json.JSONDecodeError, TypeError, ValueError):
+            return AppSettings.from_dict(self.settings.to_dict())
 
     def _refresh_queue(self) -> None:
         self.queue_list.blockSignals(True)
@@ -719,6 +879,8 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------ close
 
     def closeEvent(self, event: QCloseEvent) -> None:
+        if self._language_worker is not None and hasattr(self._language_worker, "cancel"):
+            self._language_worker.cancel()
         if self.queue.has_pending():
             answer = QMessageBox.question(
                 self,

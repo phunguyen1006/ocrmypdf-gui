@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from app.core.ocr_options import build_options, languages_for_settings, preset_overrides
 from app.models.settings import AppSettings, OcrPreset
 
@@ -9,6 +11,8 @@ from app.models.settings import AppSettings, OcrPreset
 def test_languages_for_settings() -> None:
     assert languages_for_settings(AppSettings(language_preset="vie+eng")) == ["vie", "eng"]
     assert languages_for_settings(AppSettings(language_preset="custom", custom_languages=["deu", "eng"])) == ["deu", "eng"]
+    with pytest.raises(ValueError, match="resolved before OCR"):
+        languages_for_settings(AppSettings(language_preset="auto"))
 
 
 def test_presets_are_explicit() -> None:

@@ -27,12 +27,13 @@ def qapp():
 
 @pytest.fixture()
 def win(qapp, tmp_path: Path):
-    from app.models.settings import SettingsStore
+    from app.models.settings import AppSettings, SettingsStore
     from app.services.history_service import HistoryService
     from app.ui.main_window import MainWindow
 
     store = SettingsStore(ini_path=str(tmp_path / "settings.ini"))
     store.set_first_run_done(True)  # skip the modal first-run dialog
+    store.save(AppSettings(language_preset="vie+eng"))
     history = HistoryService(db_path=str(tmp_path / "history.db"))
     window = MainWindow(store=store, history=history)
     window.show()

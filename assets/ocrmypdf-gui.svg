@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">OCRmyPDF GUI</title>
+  <desc id="desc">A searchable document page with OCR text lines and a magnifying glass.</desc>
+  <rect x="8" y="8" width="240" height="240" rx="48" fill="#111111"/>
+  <path d="M64 38h86l42 42v138H64z" fill="#ffffff"/>
+  <path d="M150 38v42h42" fill="#d8d8d8"/>
+  <path d="M150 38v42h42" fill="none" stroke="#111111" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M86 112h66M86 136h50M86 160h38" fill="none" stroke="#111111" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="164" cy="168" r="30" fill="#ffffff" stroke="#111111" stroke-width="10"/>
+  <path d="m186 190 28 28" fill="none" stroke="#111111" stroke-width="12" stroke-linecap="round"/>
+</svg>

@@ -32,6 +32,8 @@ from app.core import progress
 from app.core.ocr_options import build_options, estimate_job_work, resolve_output_path
 from app.models.job import Job
 from app.models.settings import AppSettings
+from app.services import dependency_checker
+from app.services.language_service import TesseractDataCache
 from app.utils import exceptions as exc_utils
 from app.utils.paths import app_temp_dir, make_work_dir
 from app.utils.processes import install_hidden_ocrmypdf_subprocesses
@@ -47,6 +49,39 @@ if not _plugin_path.exists():
     _plugin_path = "app.core.ocr_progress_plugin"
 
 _PLUGIN_SPEC = _plugin_path
+
+
+def _restore_windows_stdio() -> None:
+    """Expose inherited QProcess pipes when running a windowed frozen app.
+
+    PyInstaller's windowed bootloader may leave ``sys.stdin``/``stdout`` as
+    ``None``. When the executable was launched by QueueManager, the OS handles
+    still point at its pipe, so restore lightweight text wrappers instead of
+    falling back to a console window.
+    """
+    if os.name != "nt":
+        return
+    try:
+        import msvcrt
+        from ctypes import windll
+
+        for attr, std_handle, mode, flags in (
+            ("stdin", -10, "r", os.O_RDONLY),
+            ("stdout", -11, "w", os.O_WRONLY),
+            ("stderr", -12, "w", os.O_WRONLY),
+        ):
+            if getattr(sys, attr, None) is not None:
+                continue
+            handle = int(windll.kernel32.GetStdHandle(std_handle))
+            if handle in (0, -1):
+                continue
+            fd = msvcrt.open_osfhandle(handle, flags)
+            stream = os.fdopen(fd, mode, buffering=1, encoding="utf-8", errors="replace", closefd=False)
+            setattr(sys, attr, stream)
+    except (OSError, TypeError, ValueError):
+        # Source-mode pythonw already provides usable pipes; this is only a
+        # frozen-windowed compatibility fallback.
+        return
 
 
 class _EventLogHandler(logging.Handler):
@@ -350,6 +385,7 @@ def run_ocr_job(job: Job, settings: AppSettings) -> int:
 
 def run_worker() -> int:
     """Entry point for the worker process mode."""
+    _restore_windows_stdio()
     progress.EVENT_STREAM = sys.stdout
 
     root = logging.getLogger()
@@ -376,6 +412,16 @@ def run_worker() -> int:
     job = Job.from_dict(job_data.get("job", job_data))
     settings_raw = job_data.get("settings", {})
     settings = AppSettings.from_dict(settings_raw) if settings_raw else AppSettings()
+
+    # OCRmyPDF and every Tesseract subprocess inherit this merged, writable
+    # tessdata tree. It contains system models copied into app data plus any
+    # language packs downloaded lazily by the GUI, so no Administrator access
+    # or writes to Program Files are needed.
+    try:
+        cache = TesseractDataCache(tesseract_exe=dependency_checker._find_tesseract())
+        os.environ.update(cache.runtime_env())
+    except Exception as exc:  # noqa: BLE001 - OCR may still work with system data
+        log.warning("Could not prepare the app tessdata cache: %s", exc)
 
     try:
         return run_ocr_job(job, settings)

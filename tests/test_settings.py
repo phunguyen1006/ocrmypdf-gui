@@ -31,3 +31,19 @@ def test_settings_store_persists_json(tmp_path: Path) -> None:
     loaded = SettingsStore(ini_path=tmp_path / "settings.ini").load()
     assert loaded.page_range == "1-3"
     assert loaded.sidecar is True
+
+
+def test_auto_language_settings_round_trip() -> None:
+    settings = AppSettings.from_dict(
+        {
+            "language_preset": "auto",
+            "auto_download_languages": False,
+        }
+    )
+    restored = AppSettings.from_dict(settings.to_dict())
+    assert restored.language_preset == "auto"
+    assert restored.auto_download_languages is False
+
+
+def test_new_settings_default_to_per_page_auto_detect() -> None:
+    assert AppSettings().language_preset == "auto"

@@ -52,14 +52,19 @@ $args = @(
     "--distpath", $DistPath,
     "--workpath", $WorkPath,
     "--paths", $projectRoot,
+    "--icon", (Join-Path $projectRoot "assets\ocrmypdf-gui.ico"),
+    "--add-data", "$projectRoot\assets;assets",
+    "--add-data", "$projectRoot\app\data;app\data",
     "--hidden-import", "app.core.ocr_progress_plugin",
     "--collect-all", "ocrmypdf",
     "--collect-all", "pikepdf",
+    "--collect-all", "pypdfium2",
+    "--collect-all", "lingua",
     "app\main.py"
 )
 
 if ($Mode -eq "onefile") {
-    $args = @("-m", "PyInstaller", "--noconfirm", "--clean", "--windowed", "--onefile", "--name", "OCRmyPDF-GUI", "--distpath", $DistPath, "--workpath", $WorkPath, "--paths", $projectRoot, "--hidden-import", "app.core.ocr_progress_plugin", "--collect-all", "ocrmypdf", "--collect-all", "pikepdf", "app\main.py")
+    $args = @("-m", "PyInstaller", "--noconfirm", "--clean", "--windowed", "--onefile", "--name", "OCRmyPDF-GUI", "--distpath", $DistPath, "--workpath", $WorkPath, "--paths", $projectRoot, "--icon", (Join-Path $projectRoot "assets\ocrmypdf-gui.ico"), "--add-data", "$projectRoot\assets;assets", "--add-data", "$projectRoot\app\data;app\data", "--hidden-import", "app.core.ocr_progress_plugin", "--collect-all", "ocrmypdf", "--collect-all", "pikepdf", "--collect-all", "pypdfium2", "--collect-all", "lingua", "app\main.py")
 }
 
 python @args

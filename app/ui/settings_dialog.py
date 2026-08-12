@@ -3,18 +3,24 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QApplication,
     QComboBox,
     QDialog,
+    QDialogButtonBox,
     QFileDialog,
     QFormLayout,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QCheckBox,
     QPushButton,
     QGroupBox,
+    QScrollArea,
+    QSizePolicy,
     QSpinBox,
     QVBoxLayout,
+    QWidget,
     QMessageBox,
 )
 
@@ -51,11 +57,30 @@ class SettingsDialog(QDialog):
     def __init__(self, settings: AppSettings, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Advanced Settings")
-        self.setMinimumWidth(480)
+        self.setSizeGripEnabled(True)
+        screen = QApplication.primaryScreen()
+        available = screen.availableGeometry() if screen is not None else None
+        max_width = max(480, (available.width() - 80) if available is not None else 640)
+        max_height = max(420, (available.height() - 80) if available is not None else 720)
+        self.setMinimumSize(min(480, max_width), min(420, max_height))
+        self.resize(min(640, max_width), min(720, max_height))
         # Edit a copy so Cancel never changes the live application state.
         self._settings = AppSettings.from_dict(settings.to_dict())
 
-        root = QVBoxLayout(self)
+        dialog_layout = QVBoxLayout(self)
+        dialog_layout.setContentsMargins(10, 10, 10, 10)
+        dialog_layout.setSpacing(10)
+
+        scroll = QScrollArea()
+        scroll.setObjectName("settingsScroll")
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        content = QWidget()
+        content.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        root = QVBoxLayout(content)
+        root.setContentsMargins(2, 4, 12, 8)
         root.setSpacing(10)
 
         # --- OCR behavior
@@ -84,6 +109,13 @@ class SettingsDialog(QDialog):
         self.sidecar_check = QCheckBox("Also export recognized text (.txt)")
         self.sidecar_check.setToolTip("Saves a plain-text file next to the output PDF.")
         form.addRow("", self.sidecar_check)
+
+        self.auto_download_check = QCheckBox("Download missing language packs automatically")
+        self.auto_download_check.setToolTip(
+            "Downloads official tessdata_fast models into your user app data folder "
+            "when OCR starts. No Administrator permission is required."
+        )
+        form.addRow("", self.auto_download_check)
 
         root.addWidget(ocr_box)
 
@@ -178,16 +210,23 @@ class SettingsDialog(QDialog):
         root.addWidget(perf_box)
 
         # --- Buttons
-        buttons = QHBoxLayout()
-        buttons.addStretch()
-        cancel_btn = QPushButton("Cancel")
-        cancel_btn.clicked.connect(self.reject)
-        self.ok_btn = QPushButton("OK")
+        scroll.setWidget(content)
+        dialog_layout.addWidget(scroll, 1)
+
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Ok
+        )
+        buttons.setObjectName("settingsFooter")
+        self.cancel_btn = buttons.button(QDialogButtonBox.StandardButton.Cancel)
+        self.ok_btn = buttons.button(QDialogButtonBox.StandardButton.Ok)
+        assert self.cancel_btn is not None
+        assert self.ok_btn is not None
+        self.cancel_btn.setText("Cancel")
+        self.ok_btn.setText("OK")
         self.ok_btn.setObjectName("primaryButton")
-        self.ok_btn.clicked.connect(self._on_accept)
-        buttons.addWidget(cancel_btn)
-        buttons.addWidget(self.ok_btn)
-        root.addLayout(buttons)
+        buttons.accepted.connect(self._on_accept)
+        buttons.rejected.connect(self.reject)
+        dialog_layout.addWidget(buttons)
 
         self._load()
 
@@ -205,6 +244,7 @@ class SettingsDialog(QDialog):
             self.timeout_combo.setCurrentIndex(idx)
 
         self.sidecar_check.setChecked(s.sidecar)
+        self.auto_download_check.setChecked(s.auto_download_languages)
         idx = self.page_mode_combo.findData(s.page_selection_mode)
         if idx >= 0:
             self.page_mode_combo.setCurrentIndex(idx)
@@ -238,6 +278,7 @@ class SettingsDialog(QDialog):
         s.ocr_mode = self.mode_combo.currentData()
         s.tesseract_timeout = self.timeout_combo.currentData()
         s.sidecar = self.sidecar_check.isChecked()
+        s.auto_download_languages = self.auto_download_check.isChecked()
 
         s.page_selection_mode = self.page_mode_combo.currentData()
         page_range = self.range_edit.text().strip()

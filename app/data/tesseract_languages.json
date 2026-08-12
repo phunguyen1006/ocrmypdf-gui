@@ -1,0 +1,1640 @@
+{
+  "source": {
+    "repository": "https://github.com/tesseract-ocr/tessdata_fast",
+    "raw_base": "https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/87416418657359cb625c412a48b6e1d6d41c29bd",
+    "commit": "87416418657359cb625c412a48b6e1d6d41c29bd",
+    "license": "Apache-2.0"
+  },
+  "models": [
+    {
+      "code": "afr",
+      "name": "Afrikaans",
+      "kind": "language",
+      "script": "",
+      "remote_path": "afr.traineddata",
+      "size_bytes": 2652786,
+      "checksum": "09e69cf5478cd6a0fb3ec5e7e7fa95a04f5cafb3",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "sqi",
+      "name": "Albanian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "sqi.traineddata",
+      "size_bytes": 1874705,
+      "checksum": "9624fbf33452a95dd5a0a3a93fe9876108104895",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "amh",
+      "name": "Amharic",
+      "kind": "language",
+      "script": "",
+      "remote_path": "amh.traineddata",
+      "size_bytes": 5470094,
+      "checksum": "7a302b2bf6306c34177f594e0824eafc48906965",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "ara",
+      "name": "Arabic",
+      "kind": "language",
+      "script": "",
+      "remote_path": "ara.traineddata",
+      "size_bytes": 1432056,
+      "checksum": "c8d129c67821c1592cac46836686b057ecc203dc",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "asm",
+      "name": "Assamese",
+      "kind": "language",
+      "script": "",
+      "remote_path": "asm.traineddata",
+      "size_bytes": 2045427,
+      "checksum": "086035c6eacd5788c1f06d58c250023cee2aeb28",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "aze",
+      "name": "Azerbaijani",
+      "kind": "language",
+      "script": "",
+      "remote_path": "aze.traineddata",
+      "size_bytes": 3524799,
+      "checksum": "27bc73edf08e5e5f0c3e43c315c5c6d965c2f075",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "aze_cyrl",
+      "name": "Azerbaijani - Cyrillic",
+      "kind": "language",
+      "script": "",
+      "remote_path": "aze_cyrl.traineddata",
+      "size_bytes": 1943672,
+      "checksum": "e2b1b953a5b8db9247c6ddfcb58f062dc0b3b574",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "eus",
+      "name": "Basque",
+      "kind": "language",
+      "script": "",
+      "remote_path": "eus.traineddata",
+      "size_bytes": 5175921,
+      "checksum": "6247f975443ec82c219c39e0b5ea76b4833c82fe",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "bel",
+      "name": "Belarusian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "bel.traineddata",
+      "size_bytes": 3692098,
+      "checksum": "65d83dad535f876de31847f5fa2ff1bdd57c7bab",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "ben",
+      "name": "Bengali",
+      "kind": "language",
+      "script": "",
+      "remote_path": "ben.traineddata",
+      "size_bytes": 855841,
+      "checksum": "7e9054d1de309714009a85555f5276168d41af9c",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "bos",
+      "name": "Bosnian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "bos.traineddata",
+      "size_bytes": 2498242,
+      "checksum": "95bed5c32e3759347db0471569303f06e3485f42",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "bre",
+      "name": "bre",
+      "kind": "language",
+      "script": "",
+      "remote_path": "bre.traineddata",
+      "size_bytes": 6335007,
+      "checksum": "c01691329561938fb7d491ea7611c591202952dd",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "bul",
+      "name": "Bulgarian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "bul.traineddata",
+      "size_bytes": 1675212,
+      "checksum": "1e65588d127d918ef3ba95b785b446f15827d60f",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "mya",
+      "name": "Burmese",
+      "kind": "language",
+      "script": "",
+      "remote_path": "mya.traineddata",
+      "size_bytes": 4640561,
+      "checksum": "cf28ddca604dc7f46bc34f2f4c6a193a0706c03b",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "cat",
+      "name": "Catalan; Valencian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "cat.traineddata",
+      "size_bytes": 1146012,
+      "checksum": "3fcd350dd2bb76503de90249111fff4e3c6aa0f0",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "ceb",
+      "name": "Cebuano",
+      "kind": "language",
+      "script": "",
+      "remote_path": "ceb.traineddata",
+      "size_bytes": 716214,
+      "checksum": "5a1b96928e54b175db96f00d2aa84b5878d301b9",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "khm",
+      "name": "Central Khmer",
+      "kind": "language",
+      "script": "",
+      "remote_path": "khm.traineddata",
+      "size_bytes": 1446926,
+      "checksum": "d466dc2a7e35bf90cb7b54364985703728398687",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "chr",
+      "name": "Cherokee",
+      "kind": "language",
+      "script": "",
+      "remote_path": "chr.traineddata",
+      "size_bytes": 374944,
+      "checksum": "e0799a2b888466e5bc2ca60f1f2fb4a7ff4c6990",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "chi_sim_vert",
+      "name": "chi_sim_vert",
+      "kind": "language",
+      "script": "",
+      "remote_path": "chi_sim_vert.traineddata",
+      "size_bytes": 1927902,
+      "checksum": "f9898e91068a9d04bcacf6d2a244da40e9f30c0c",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "chi_tra_vert",
+      "name": "chi_tra_vert",
+      "kind": "language",
+      "script": "",
+      "remote_path": "chi_tra_vert.traineddata",
+      "size_bytes": 1824756,
+      "checksum": "94bc5dbd7fa25dd89ac9c5bd18f3fc6d8409aa0e",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "chi_sim",
+      "name": "Chinese - Simplified",
+      "kind": "language",
+      "script": "",
+      "remote_path": "chi_sim.traineddata",
+      "size_bytes": 2469156,
+      "checksum": "388bac276d033d06e5ed5ba7a7ad14ae58f97dab",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "chi_tra",
+      "name": "Chinese - Traditional",
+      "kind": "language",
+      "script": "",
+      "remote_path": "chi_tra.traineddata",
+      "size_bytes": 2366642,
+      "checksum": "1955cd8b8d076b898616e9c2c1ace65b43105356",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "cos",
+      "name": "cos",
+      "kind": "language",
+      "script": "",
+      "remote_path": "cos.traineddata",
+      "size_bytes": 2299099,
+      "checksum": "3105b7fb0cd6c26f4fb144ec5d594430e88927cb",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "hrv",
+      "name": "Croatian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "hrv.traineddata",
+      "size_bytes": 4103348,
+      "checksum": "6dd4f8638a58eb0663e8f9a80a355c505dcf01a6",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "ces",
+      "name": "Czech",
+      "kind": "language",
+      "script": "",
+      "remote_path": "ces.traineddata",
+      "size_bytes": 3795684,
+      "checksum": "dd6fc79a62f9fcd1c7c6da06b31bb4fdb10dc173",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "dan",
+      "name": "Danish",
+      "kind": "language",
+      "script": "",
+      "remote_path": "dan.traineddata",
+      "size_bytes": 2580059,
+      "checksum": "85501b582937493f9ae6a64ccd0a6bb0a2ea33d5",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "deu_latf",
+      "name": "deu_latf",
+      "kind": "language",
+      "script": "",
+      "remote_path": "deu_latf.traineddata",
+      "size_bytes": 6423052,
+      "checksum": "11a641044a93413454f75fbb8e05b085bd0b9d8d",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "div",
+      "name": "div",
+      "kind": "language",
+      "script": "",
+      "remote_path": "div.traineddata",
+      "size_bytes": 1774535,
+      "checksum": "53b46df7d6ae94f75913d6377182867ea09d950b",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "nld",
+      "name": "Dutch; Flemish",
+      "kind": "language",
+      "script": "",
+      "remote_path": "nld.traineddata",
+      "size_bytes": 6050296,
+      "checksum": "53ce95a9c2488a9a0228939944a184157373d0ae",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "dzo",
+      "name": "Dzongkha",
+      "kind": "language",
+      "script": "",
+      "remote_path": "dzo.traineddata",
+      "size_bytes": 449596,
+      "checksum": "3c31175be56ab4db42af614f384ea52ce949082c",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "eng",
+      "name": "English",
+      "kind": "language",
+      "script": "",
+      "remote_path": "eng.traineddata",
+      "size_bytes": 4113088,
+      "checksum": "bbef4675053b5b468cdb477053e28b1c698ba08e",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "enm",
+      "name": "English, Middle (1100-1500)",
+      "kind": "language",
+      "script": "",
+      "remote_path": "enm.traineddata",
+      "size_bytes": 3101551,
+      "checksum": "e49b5b86da60f2e728ff2b7f4357692ac32b6a6d",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "epo",
+      "name": "Esperanto",
+      "kind": "language",
+      "script": "",
+      "remote_path": "epo.traineddata",
+      "size_bytes": 4728393,
+      "checksum": "235fc67adf52f43d34b409d44d426d560aefc8e3",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "est",
+      "name": "Estonian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "est.traineddata",
+      "size_bytes": 4458101,
+      "checksum": "a2b52c3388358e6dfc4eb8d64d8fc6afbb3630ea",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "fao",
+      "name": "fao",
+      "kind": "language",
+      "script": "",
+      "remote_path": "fao.traineddata",
+      "size_bytes": 3439772,
+      "checksum": "1b845e73759785908aef57161ae4c86a70cce622",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "fil",
+      "name": "fil",
+      "kind": "language",
+      "script": "",
+      "remote_path": "fil.traineddata",
+      "size_bytes": 1841715,
+      "checksum": "785f80decce6ddb6b50bd99f4840414359c806ff",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "fin",
+      "name": "Finnish",
+      "kind": "language",
+      "script": "",
+      "remote_path": "fin.traineddata",
+      "size_bytes": 7865732,
+      "checksum": "73f92402f1891b9066e0e145f245145a2402105c",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "fra",
+      "name": "French",
+      "kind": "language",
+      "script": "",
+      "remote_path": "fra.traineddata",
+      "size_bytes": 1130365,
+      "checksum": "d9e2b2160be0d1ca3b8f1bf2730fae476ef3b4a6",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "frm",
+      "name": "French, Middle (ca. 1400-1600)",
+      "kind": "language",
+      "script": "",
+      "remote_path": "frm.traineddata",
+      "size_bytes": 2024948,
+      "checksum": "ed06039efef821b78f22c86abb6c5aea7f02461e",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "fry",
+      "name": "fry",
+      "kind": "language",
+      "script": "",
+      "remote_path": "fry.traineddata",
+      "size_bytes": 1906018,
+      "checksum": "17199d2c33e201d6ad4003a6c86db5f8f273ddc1",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "glg",
+      "name": "Galician",
+      "kind": "language",
+      "script": "",
+      "remote_path": "glg.traineddata",
+      "size_bytes": 2554555,
+      "checksum": "7bc00b38f40f8de1575397f7d05387e5fbbacca4",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "kat",
+      "name": "Georgian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "kat.traineddata",
+      "size_bytes": 2524769,
+      "checksum": "1a3ae11fdd248891dd3fc74f156a0ce246ec1a15",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "kat_old",
+      "name": "Georgian - Old",
+      "kind": "language",
+      "script": "",
+      "remote_path": "kat_old.traineddata",
+      "size_bytes": 423167,
+      "checksum": "f4ae5ab4b3fe4bb3226639d9b23fa71513a40ec8",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "deu",
+      "name": "German",
+      "kind": "language",
+      "script": "",
+      "remote_path": "deu.traineddata",
+      "size_bytes": 1525436,
+      "checksum": "97ed7b2b60f2771c07040660ef0f6daf596dc7bf",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "frk",
+      "name": "German Fraktur",
+      "kind": "language",
+      "script": "",
+      "remote_path": "frk.traineddata",
+      "size_bytes": 20,
+      "checksum": "d473893bcabcef536ed36480f976fcce482bd87c",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "gla",
+      "name": "gla",
+      "kind": "language",
+      "script": "",
+      "remote_path": "gla.traineddata",
+      "size_bytes": 3068307,
+      "checksum": "e8bae7f1863dd1872ab7d2b2e7f319874c480e60",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "grc",
+      "name": "Greek, Ancient (-1453)",
+      "kind": "language",
+      "script": "",
+      "remote_path": "grc.traineddata",
+      "size_bytes": 2246328,
+      "checksum": "e94990006fc18e88ab120e7ca6681cc3b290269b",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "ell",
+      "name": "Greek, Modern (1453-)",
+      "kind": "language",
+      "script": "",
+      "remote_path": "ell.traineddata",
+      "size_bytes": 1419514,
+      "checksum": "ed98ae1a88d84414da316e6eeab3232f2c68639b",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "guj",
+      "name": "Gujarati",
+      "kind": "language",
+      "script": "",
+      "remote_path": "guj.traineddata",
+      "size_bytes": 1418394,
+      "checksum": "151b9aad2945e3103118e5d36eee288f631d985a",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "hat",
+      "name": "Haitian; Haitian Creole",
+      "kind": "language",
+      "script": "",
+      "remote_path": "hat.traineddata",
+      "size_bytes": 1976902,
+      "checksum": "30d3baeaeef791781d782e58feb415b25921df3f",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "heb",
+      "name": "Hebrew",
+      "kind": "language",
+      "script": "",
+      "remote_path": "heb.traineddata",
+      "size_bytes": 961404,
+      "checksum": "7356caf3cddc9c867fe6727e17726727b8284608",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "hin",
+      "name": "Hindi",
+      "kind": "language",
+      "script": "",
+      "remote_path": "hin.traineddata",
+      "size_bytes": 1122751,
+      "checksum": "a8f0aaec09378115b12a2c6287c57695d082aea2",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "hun",
+      "name": "Hungarian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "hun.traineddata",
+      "size_bytes": 5296273,
+      "checksum": "5d24fa8e922d6b57853dcb0cc490060c76643cab",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "hye",
+      "name": "hye",
+      "kind": "language",
+      "script": "",
+      "remote_path": "hye.traineddata",
+      "size_bytes": 3463717,
+      "checksum": "ec2e2f3adea785e8964b9771871c44349a6e1b40",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "isl",
+      "name": "Icelandic",
+      "kind": "language",
+      "script": "",
+      "remote_path": "isl.traineddata",
+      "size_bytes": 2278973,
+      "checksum": "20d3bdf8cb8f2289a1f45aa9cdf4ddf2a22e7462",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "ind",
+      "name": "Indonesian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "ind.traineddata",
+      "size_bytes": 1122661,
+      "checksum": "3013f50cd2af9aceca00e865ed889144865f0848",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "iku",
+      "name": "Inuktitut",
+      "kind": "language",
+      "script": "",
+      "remote_path": "iku.traineddata",
+      "size_bytes": 2802266,
+      "checksum": "6eab87ffe818b5f89baa869c458cb0a6dbed6b2d",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "gle",
+      "name": "Irish",
+      "kind": "language",
+      "script": "",
+      "remote_path": "gle.traineddata",
+      "size_bytes": 1181824,
+      "checksum": "a7abc7be9aadc862b31ab7c7bc672051cd0245fb",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "ita",
+      "name": "Italian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "ita.traineddata",
+      "size_bytes": 2701314,
+      "checksum": "edbffbe0e51892b240630b5eeabededa7e7c9c4f",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "ita_old",
+      "name": "Italian - Old",
+      "kind": "language",
+      "script": "",
+      "remote_path": "ita_old.traineddata",
+      "size_bytes": 3286123,
+      "checksum": "c8a2c3c3d8c82a2d953b0fc64b949c1aa0918c09",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "jpn",
+      "name": "Japanese",
+      "kind": "language",
+      "script": "",
+      "remote_path": "jpn.traineddata",
+      "size_bytes": 2471260,
+      "checksum": "c4178f89991bde90b7fdc647e3e1901868423bd0",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "jav",
+      "name": "Javanese",
+      "kind": "language",
+      "script": "",
+      "remote_path": "jav.traineddata",
+      "size_bytes": 2982741,
+      "checksum": "3155b8184d50af28dbf8dcbd972e26b388ab1581",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "jpn_vert",
+      "name": "jpn_vert",
+      "kind": "language",
+      "script": "",
+      "remote_path": "jpn_vert.traineddata",
+      "size_bytes": 3037480,
+      "checksum": "43f38defe4b83588876d0d7a6dee928be1b73af0",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "kan",
+      "name": "Kannada",
+      "kind": "language",
+      "script": "",
+      "remote_path": "kan.traineddata",
+      "size_bytes": 3608331,
+      "checksum": "78252baeed24bcf327e62226c321c60242108a24",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "kaz",
+      "name": "Kazakh",
+      "kind": "language",
+      "script": "",
+      "remote_path": "kaz.traineddata",
+      "size_bytes": 4734644,
+      "checksum": "f889e2b8ffd093d4f2dff8ffca2fa0b73296c028",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "kir",
+      "name": "Kirghiz; Kyrgyz",
+      "kind": "language",
+      "script": "",
+      "remote_path": "kir.traineddata",
+      "size_bytes": 9928497,
+      "checksum": "3e04f2954f33dd021b95de4befffb68904d9e142",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "kmr",
+      "name": "kmr",
+      "kind": "language",
+      "script": "",
+      "remote_path": "kmr.traineddata",
+      "size_bytes": 3568615,
+      "checksum": "d1afefb7c5a67e273c6612aba77753021506b557",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "kor_vert",
+      "name": "kor_vert",
+      "kind": "language",
+      "script": "",
+      "remote_path": "kor_vert.traineddata",
+      "size_bytes": 1113715,
+      "checksum": "ea0a4963591f153a21c8f237de2a1c644b57f2b9",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "kor",
+      "name": "Korean",
+      "kind": "language",
+      "script": "",
+      "remote_path": "kor.traineddata",
+      "size_bytes": 1677415,
+      "checksum": "60986d44497689f3abace0b148199476d93292e1",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "lao",
+      "name": "Lao",
+      "kind": "language",
+      "script": "",
+      "remote_path": "lao.traineddata",
+      "size_bytes": 6386744,
+      "checksum": "10bd41ae9352889f85a489eb3183eb0cbebc2516",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "lat",
+      "name": "Latin",
+      "kind": "language",
+      "script": "",
+      "remote_path": "lat.traineddata",
+      "size_bytes": 3187463,
+      "checksum": "30dab6a24339f262d1eb21a3ee272d16c46aeba3",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "lav",
+      "name": "Latvian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "lav.traineddata",
+      "size_bytes": 2717247,
+      "checksum": "71d925c8b6c73980157fd0128412b46e6e8396b5",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "lit",
+      "name": "Lithuanian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "lit.traineddata",
+      "size_bytes": 3154896,
+      "checksum": "af9e2b3cd6a65650206b7d89f1b93b51683b9692",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "ltz",
+      "name": "ltz",
+      "kind": "language",
+      "script": "",
+      "remote_path": "ltz.traineddata",
+      "size_bytes": 2606426,
+      "checksum": "c1ac5b922bbcad34b2654ba471c0a752c0397404",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "mkd",
+      "name": "Macedonian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "mkd.traineddata",
+      "size_bytes": 1600188,
+      "checksum": "fb0b245fb9ec61696e818887a70d8413b2914905",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "msa",
+      "name": "Malay",
+      "kind": "language",
+      "script": "",
+      "remote_path": "msa.traineddata",
+      "size_bytes": 1747801,
+      "checksum": "f0e2b8bef0a681f09baac99a418529205ee80201",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "mal",
+      "name": "Malayalam",
+      "kind": "language",
+      "script": "",
+      "remote_path": "mal.traineddata",
+      "size_bytes": 5275996,
+      "checksum": "70e96f02cbc2f26630225112cd323a7f0b6ccdf3",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "mlt",
+      "name": "Maltese",
+      "kind": "language",
+      "script": "",
+      "remote_path": "mlt.traineddata",
+      "size_bytes": 2308796,
+      "checksum": "4242f9cd016987f16feb06973e988eced9604787",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "mar",
+      "name": "Marathi",
+      "kind": "language",
+      "script": "",
+      "remote_path": "mar.traineddata",
+      "size_bytes": 2118233,
+      "checksum": "79138fadcdb256ec7b59e3bf9df18bd5fb492bee",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "equ",
+      "name": "Math / equation detection",
+      "kind": "language",
+      "script": "",
+      "remote_path": "equ.traineddata",
+      "size_bytes": 2251950,
+      "checksum": "27b470378dc8718f1dc5a93931fefa3340336e4d",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "mon",
+      "name": "mon",
+      "kind": "language",
+      "script": "",
+      "remote_path": "mon.traineddata",
+      "size_bytes": 2137042,
+      "checksum": "2ef212c519edc66ff2508f48dbe1bb836a4ea274",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "mri",
+      "name": "mri",
+      "kind": "language",
+      "script": "",
+      "remote_path": "mri.traineddata",
+      "size_bytes": 862973,
+      "checksum": "eab6b1a98e4b6ed510d6443a5e3d14519da3b338",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "nep",
+      "name": "Nepali",
+      "kind": "language",
+      "script": "",
+      "remote_path": "nep.traineddata",
+      "size_bytes": 1002911,
+      "checksum": "948e365b55f9fe8179dde2ff0134feffb210496e",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "nor",
+      "name": "Norwegian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "nor.traineddata",
+      "size_bytes": 3610079,
+      "checksum": "9209df2c9904c127437c07e16c287cdefd024e7c",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "oci",
+      "name": "oci",
+      "kind": "language",
+      "script": "",
+      "remote_path": "oci.traineddata",
+      "size_bytes": 6322087,
+      "checksum": "4017d4405b09333f22a3de2a4d30cf009bdb4a9b",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "osd",
+      "name": "Orientation and script detection",
+      "kind": "language",
+      "script": "",
+      "remote_path": "osd.traineddata",
+      "size_bytes": 10562727,
+      "checksum": "527457ca8f8fe1fda7c2f88bce3c0e4be12be9d0",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "ori",
+      "name": "Oriya",
+      "kind": "language",
+      "script": "",
+      "remote_path": "ori.traineddata",
+      "size_bytes": 1480066,
+      "checksum": "ae0f9ed13d5c9ad4a4de57c7266c434b83a9f583",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "pan",
+      "name": "Panjabi; Punjabi",
+      "kind": "language",
+      "script": "",
+      "remote_path": "pan.traineddata",
+      "size_bytes": 497721,
+      "checksum": "d4f00533a6c76ce4045aa6ad40b39f47eeaa333f",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "fas",
+      "name": "Persian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "fas.traineddata",
+      "size_bytes": 431500,
+      "checksum": "1a17ee02076107e73abd15d2038389150c8f824f",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "pol",
+      "name": "Polish",
+      "kind": "language",
+      "script": "",
+      "remote_path": "pol.traineddata",
+      "size_bytes": 4765518,
+      "checksum": "2382f568f0ce0c4c0a7f4380a291255514e5e97f",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "por",
+      "name": "Portuguese",
+      "kind": "language",
+      "script": "",
+      "remote_path": "por.traineddata",
+      "size_bytes": 1982756,
+      "checksum": "e9f373e95c66b4bf557c263721ef31f78e5bc301",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "pus",
+      "name": "Pushto; Pashto",
+      "kind": "language",
+      "script": "",
+      "remote_path": "pus.traineddata",
+      "size_bytes": 1772087,
+      "checksum": "220cdf92efdc76a227439c0b8734196af9743b98",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "que",
+      "name": "que",
+      "kind": "language",
+      "script": "",
+      "remote_path": "que.traineddata",
+      "size_bytes": 5026336,
+      "checksum": "d80c1f308973b3129183843759f23fdcb1c5c2be",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "ron",
+      "name": "Romanian; Moldavian; Moldovan",
+      "kind": "language",
+      "script": "",
+      "remote_path": "ron.traineddata",
+      "size_bytes": 2376323,
+      "checksum": "04cd2bc7b471431354e9446e973f3472f442e189",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "rus",
+      "name": "Russian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "rus.traineddata",
+      "size_bytes": 3861738,
+      "checksum": "b146cb2263acbc6383f8e92ea0ce759537687bb8",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "san",
+      "name": "Sanskrit",
+      "kind": "language",
+      "script": "",
+      "remote_path": "san.traineddata",
+      "size_bytes": 12404677,
+      "checksum": "3df043f3247fd41a21ac47c3b199bc87643e984b",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "srp",
+      "name": "Serbian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "srp.traineddata",
+      "size_bytes": 2149931,
+      "checksum": "530fb4b1cb27f369bbee7eb0add89bfd73d6f15c",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "srp_latn",
+      "name": "Serbian - Latin",
+      "kind": "language",
+      "script": "",
+      "remote_path": "srp_latn.traineddata",
+      "size_bytes": 3281787,
+      "checksum": "5f81e591adad58a179a2d371aacccaf0801f93a2",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "sin",
+      "name": "Sinhala; Sinhalese",
+      "kind": "language",
+      "script": "",
+      "remote_path": "sin.traineddata",
+      "size_bytes": 1727413,
+      "checksum": "d0c8584e78c44666efcd7fbd47940a8a1121550d",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "slk",
+      "name": "Slovak",
+      "kind": "language",
+      "script": "",
+      "remote_path": "slk.traineddata",
+      "size_bytes": 4427661,
+      "checksum": "ca99e3e82f69a0e16b48cdfec3c4e706758269f2",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "slv",
+      "name": "Slovenian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "slv.traineddata",
+      "size_bytes": 3003829,
+      "checksum": "835954e891897d3c8b63db48cb5c2712ef2e6b11",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "snd",
+      "name": "snd",
+      "kind": "language",
+      "script": "",
+      "remote_path": "snd.traineddata",
+      "size_bytes": 1694035,
+      "checksum": "1ef6548d22977dc1f236be879dce3a62ac6a47ed",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "spa",
+      "name": "Spanish; Castilian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "spa.traineddata",
+      "size_bytes": 2294433,
+      "checksum": "72e901f13ca52cfe34cf239a368b9ed3c0ddaf26",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "spa_old",
+      "name": "Spanish; Castilian - Old",
+      "kind": "language",
+      "script": "",
+      "remote_path": "spa_old.traineddata",
+      "size_bytes": 2894755,
+      "checksum": "42b281f55736b2f714598accfc2a78f409db1f0c",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "sun",
+      "name": "sun",
+      "kind": "language",
+      "script": "",
+      "remote_path": "sun.traineddata",
+      "size_bytes": 1369500,
+      "checksum": "894891425c1fe302ce1d8f115a3c00967c6c2832",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "swa",
+      "name": "Swahili",
+      "kind": "language",
+      "script": "",
+      "remote_path": "swa.traineddata",
+      "size_bytes": 2167651,
+      "checksum": "633d73b35869600452eec58dcd9036cc702c3e48",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "swe",
+      "name": "Swedish",
+      "kind": "language",
+      "script": "",
+      "remote_path": "swe.traineddata",
+      "size_bytes": 4167034,
+      "checksum": "684e1fa66e4a55b983febf5f9ed04f26ad946e59",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "syr",
+      "name": "Syriac",
+      "kind": "language",
+      "script": "",
+      "remote_path": "syr.traineddata",
+      "size_bytes": 2207208,
+      "checksum": "462aefc8a1485ae4c38db82f7f50fd105bf30195",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "tgk",
+      "name": "Tajik",
+      "kind": "language",
+      "script": "",
+      "remote_path": "tgk.traineddata",
+      "size_bytes": 2602685,
+      "checksum": "044766728ce9cb2cc73976175b970a4cea9a870a",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "tam",
+      "name": "Tamil",
+      "kind": "language",
+      "script": "",
+      "remote_path": "tam.traineddata",
+      "size_bytes": 3237963,
+      "checksum": "fa1793d68f9aba8bf191e8ff1036e2271d288e44",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "tat",
+      "name": "tat",
+      "kind": "language",
+      "script": "",
+      "remote_path": "tat.traineddata",
+      "size_bytes": 1072896,
+      "checksum": "9485ca27d48bb161a47584f8381420462ef6fa27",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "tel",
+      "name": "Telugu",
+      "kind": "language",
+      "script": "",
+      "remote_path": "tel.traineddata",
+      "size_bytes": 2769654,
+      "checksum": "ee8a33b0f658fc75b8cbfe8c10413eac4f41e6ad",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "tha",
+      "name": "Thai",
+      "kind": "language",
+      "script": "",
+      "remote_path": "tha.traineddata",
+      "size_bytes": 1072600,
+      "checksum": "ea28de3985668cac00d261c5b91f023ea66e19cd",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "bod",
+      "name": "Tibetan",
+      "kind": "language",
+      "script": "",
+      "remote_path": "bod.traineddata",
+      "size_bytes": 1966440,
+      "checksum": "7bb5029466eaef46aad59fc23b96648df0e4f176",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "tir",
+      "name": "Tigrinya",
+      "kind": "language",
+      "script": "",
+      "remote_path": "tir.traineddata",
+      "size_bytes": 378822,
+      "checksum": "55e62eb0297e07360db5e9dc5dd86aab8e0a1e9c",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "ton",
+      "name": "ton",
+      "kind": "language",
+      "script": "",
+      "remote_path": "ton.traineddata",
+      "size_bytes": 947249,
+      "checksum": "9eff0fd002798089f5f7d8307be968a36f1ce433",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "tur",
+      "name": "Turkish",
+      "kind": "language",
+      "script": "",
+      "remote_path": "tur.traineddata",
+      "size_bytes": 4550554,
+      "checksum": "1f0b331ef29f50ceb7c44da58e38c7ec42314d0a",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "uig",
+      "name": "Uighur; Uyghur",
+      "kind": "language",
+      "script": "",
+      "remote_path": "uig.traineddata",
+      "size_bytes": 2794272,
+      "checksum": "36124d6b0ed1c2654a13551203c25b44b4013978",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "ukr",
+      "name": "Ukrainian",
+      "kind": "language",
+      "script": "",
+      "remote_path": "ukr.traineddata",
+      "size_bytes": 3825102,
+      "checksum": "d02cf90b2911a3da66dac6ae380bcefb18dd7663",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "urd",
+      "name": "Urdu",
+      "kind": "language",
+      "script": "",
+      "remote_path": "urd.traineddata",
+      "size_bytes": 1398718,
+      "checksum": "715a159d4abea25294c82971be28be215b3d1c4a",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "uzb",
+      "name": "Uzbek",
+      "kind": "language",
+      "script": "",
+      "remote_path": "uzb.traineddata",
+      "size_bytes": 6470703,
+      "checksum": "109abc765273b2c9eabd55781f0a619320c80007",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "uzb_cyrl",
+      "name": "Uzbek - Cyrillic",
+      "kind": "language",
+      "script": "",
+      "remote_path": "uzb_cyrl.traineddata",
+      "size_bytes": 1563501,
+      "checksum": "c2ff8b9c282a9712b5f24970927377bc18dea7cf",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "vie",
+      "name": "Vietnamese",
+      "kind": "language",
+      "script": "",
+      "remote_path": "vie.traineddata",
+      "size_bytes": 531275,
+      "checksum": "e54a5912fb634c581c4a45ae9f37cbc021ec7140",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "cym",
+      "name": "Welsh",
+      "kind": "language",
+      "script": "",
+      "remote_path": "cym.traineddata",
+      "size_bytes": 2208919,
+      "checksum": "900cf17f74514934f87e9a8df3b29cb16b5606fe",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "yid",
+      "name": "Yiddish",
+      "kind": "language",
+      "script": "",
+      "remote_path": "yid.traineddata",
+      "size_bytes": 545606,
+      "checksum": "6349588bbabf99f8a812e8231c98c015ea7b60c6",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "yor",
+      "name": "yor",
+      "kind": "language",
+      "script": "",
+      "remote_path": "yor.traineddata",
+      "size_bytes": 963400,
+      "checksum": "3e0cd582f65f17844039173057dfc015bf19f61d",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Arabic",
+      "name": "Arabic script",
+      "kind": "script",
+      "script": "Arabic",
+      "remote_path": "script/Arabic.traineddata",
+      "size_bytes": 9311038,
+      "checksum": "4d4bac05b8be69aafb537d3a753efec6be473953",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Armenian",
+      "name": "Armenian script",
+      "kind": "script",
+      "script": "Armenian",
+      "remote_path": "script/Armenian.traineddata",
+      "size_bytes": 7879909,
+      "checksum": "7e4cf10f1fb571dbce0afea837db15cd11b44f39",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Bengali",
+      "name": "Bengali script",
+      "kind": "script",
+      "script": "Bengali",
+      "remote_path": "script/Bengali.traineddata",
+      "size_bytes": 5712242,
+      "checksum": "a1b888e492320fb9b941dbf0d7fe9d767e5f6a42",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Canadian_Aboriginal",
+      "name": "Canadian_Aboriginal script",
+      "kind": "script",
+      "script": "Canadian_Aboriginal",
+      "remote_path": "script/Canadian_Aboriginal.traineddata",
+      "size_bytes": 7180795,
+      "checksum": "9ba41b35b6b06892657a61dd33003bc8a0a9483a",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Cherokee",
+      "name": "Cherokee script",
+      "kind": "script",
+      "script": "Cherokee",
+      "remote_path": "script/Cherokee.traineddata",
+      "size_bytes": 4231619,
+      "checksum": "94834e6e395e97209c59846dc78320e830f67a12",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Cyrillic",
+      "name": "Cyrillic script",
+      "kind": "script",
+      "script": "Cyrillic",
+      "remote_path": "script/Cyrillic.traineddata",
+      "size_bytes": 29252466,
+      "checksum": "1901a7483cccad6c43d1052bb40d754ae53694b4",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Devanagari",
+      "name": "Devanagari script",
+      "kind": "script",
+      "script": "Devanagari",
+      "remote_path": "script/Devanagari.traineddata",
+      "size_bytes": 17943870,
+      "checksum": "3c33bd676b0ae7a480ec1c1f5ebdd13513aa5433",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Ethiopic",
+      "name": "Ethiopic script",
+      "kind": "script",
+      "script": "Ethiopic",
+      "remote_path": "script/Ethiopic.traineddata",
+      "size_bytes": 9074416,
+      "checksum": "e6c0944e630c580f4a9d6d4a8ebeaeaca3583164",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Fraktur",
+      "name": "Fraktur script",
+      "kind": "script",
+      "script": "Fraktur",
+      "remote_path": "script/Fraktur.traineddata",
+      "size_bytes": 10915632,
+      "checksum": "28262227524b894a1f283e8edd2245f11d9e3e9f",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Georgian",
+      "name": "Georgian script",
+      "kind": "script",
+      "script": "Georgian",
+      "remote_path": "script/Georgian.traineddata",
+      "size_bytes": 6949865,
+      "checksum": "77511502fa8dd8d1aec6700b697bdd3cc501a78d",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Greek",
+      "name": "Greek script",
+      "kind": "script",
+      "script": "Greek",
+      "remote_path": "script/Greek.traineddata",
+      "size_bytes": 3041556,
+      "checksum": "0fdbf7f0eb07e1c4a72f580afba84cd85cafc177",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Gujarati",
+      "name": "Gujarati script",
+      "kind": "script",
+      "script": "Gujarati",
+      "remote_path": "script/Gujarati.traineddata",
+      "size_bytes": 5017100,
+      "checksum": "9f203b6620b479149fe022553278a48032c87f21",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Gurmukhi",
+      "name": "Gurmukhi script",
+      "kind": "script",
+      "script": "Gurmukhi",
+      "remote_path": "script/Gurmukhi.traineddata",
+      "size_bytes": 4213597,
+      "checksum": "36e1161b20dac2826f80c7e27f753670177116a2",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Hangul_vert",
+      "name": "Hangul (vertical) script",
+      "kind": "script",
+      "script": "Hangul",
+      "remote_path": "script/Hangul_vert.traineddata",
+      "size_bytes": 4725034,
+      "checksum": "4e421ca8baa936ffad67b6bd78df848bbfb4fa03",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Hangul",
+      "name": "Hangul script",
+      "kind": "script",
+      "script": "Hangul",
+      "remote_path": "script/Hangul.traineddata",
+      "size_bytes": 4845849,
+      "checksum": "977fd63d7430853e04f49c43400dc576144cfe0e",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/HanS_vert",
+      "name": "HanS (vertical) script",
+      "kind": "script",
+      "script": "HanS",
+      "remote_path": "script/HanS_vert.traineddata",
+      "size_bytes": 5429738,
+      "checksum": "a0464cb0478f089f00cbfa715a15ba5aba5d0e37",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/HanS",
+      "name": "HanS script",
+      "kind": "script",
+      "script": "HanS",
+      "remote_path": "script/HanS.traineddata",
+      "size_bytes": 5972903,
+      "checksum": "41d7386cacc0faf19b381f9bba035cb3bcc7f8f9",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/HanT_vert",
+      "name": "HanT (vertical) script",
+      "kind": "script",
+      "script": "HanT",
+      "remote_path": "script/HanT_vert.traineddata",
+      "size_bytes": 5448267,
+      "checksum": "99757fde125138e5d889784d0d9f2edd659defac",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/HanT",
+      "name": "HanT script",
+      "kind": "script",
+      "script": "HanT",
+      "remote_path": "script/HanT.traineddata",
+      "size_bytes": 5448070,
+      "checksum": "ac8c8e97a2e75db8afd1a843527f350737973435",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Hebrew",
+      "name": "Hebrew script",
+      "kind": "script",
+      "script": "Hebrew",
+      "remote_path": "script/Hebrew.traineddata",
+      "size_bytes": 4866337,
+      "checksum": "590055a3db20484eb90e6bd1a9223f36b69ea907",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Japanese_vert",
+      "name": "Japanese (vertical) script",
+      "kind": "script",
+      "script": "Japanese",
+      "remote_path": "script/Japanese_vert.traineddata",
+      "size_bytes": 6445356,
+      "checksum": "5c211c42046ada01847b1628a6f1766826c2a371",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Japanese",
+      "name": "Japanese script",
+      "kind": "script",
+      "script": "Japanese",
+      "remote_path": "script/Japanese.traineddata",
+      "size_bytes": 5877645,
+      "checksum": "89481f2c257019f1ea58c82b7daaac9688f7b172",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Kannada",
+      "name": "Kannada script",
+      "kind": "script",
+      "script": "Kannada",
+      "remote_path": "script/Kannada.traineddata",
+      "size_bytes": 6777791,
+      "checksum": "238f7a104e604a27b14ca956df2f346f7750099b",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Khmer",
+      "name": "Khmer script",
+      "kind": "script",
+      "script": "Khmer",
+      "remote_path": "script/Khmer.traineddata",
+      "size_bytes": 4476365,
+      "checksum": "635b310e6a79c3aac2fe5aa12dd5bcb7718c2e15",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Lao",
+      "name": "Lao script",
+      "kind": "script",
+      "script": "Lao",
+      "remote_path": "script/Lao.traineddata",
+      "size_bytes": 10103937,
+      "checksum": "0bdf44f32650e6f15ef0491f88dee430994dca62",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Latin",
+      "name": "Latin script",
+      "kind": "script",
+      "script": "Latin",
+      "remote_path": "script/Latin.traineddata",
+      "size_bytes": 89384811,
+      "checksum": "8b6e3a3ae06e6b623b587e9f87c988e169fa1c6b",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Malayalam",
+      "name": "Malayalam script",
+      "kind": "script",
+      "script": "Malayalam",
+      "remote_path": "script/Malayalam.traineddata",
+      "size_bytes": 9007302,
+      "checksum": "9e639ea78e5040c75bce36e1231755901448e4ef",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Myanmar",
+      "name": "Myanmar script",
+      "kind": "script",
+      "script": "Myanmar",
+      "remote_path": "script/Myanmar.traineddata",
+      "size_bytes": 7840489,
+      "checksum": "733ebd14f67a5a52211abfc6f66b485a23a8b955",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Oriya",
+      "name": "Oriya script",
+      "kind": "script",
+      "script": "Oriya",
+      "remote_path": "script/Oriya.traineddata",
+      "size_bytes": 5744929,
+      "checksum": "d9ef97617c0914028360f703d810564013542421",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Sinhala",
+      "name": "Sinhala script",
+      "kind": "script",
+      "script": "Sinhala",
+      "remote_path": "script/Sinhala.traineddata",
+      "size_bytes": 4782577,
+      "checksum": "98d26bd5f71305d96f947e29d3fcb455ff26bc9f",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Syriac",
+      "name": "Syriac script",
+      "kind": "script",
+      "script": "Syriac",
+      "remote_path": "script/Syriac.traineddata",
+      "size_bytes": 5803220,
+      "checksum": "b97923946987070b6ee69ab41d4bc4c87b739001",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Tamil",
+      "name": "Tamil script",
+      "kind": "script",
+      "script": "Tamil",
+      "remote_path": "script/Tamil.traineddata",
+      "size_bytes": 7089032,
+      "checksum": "48fede126ba6e563a69ca10eae3604e42143039f",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Telugu",
+      "name": "Telugu script",
+      "kind": "script",
+      "script": "Telugu",
+      "remote_path": "script/Telugu.traineddata",
+      "size_bytes": 6485174,
+      "checksum": "0468e5dc1eee3059191b4ac2d7109a9431ce42c1",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Thaana",
+      "name": "Thaana script",
+      "kind": "script",
+      "script": "Thaana",
+      "remote_path": "script/Thaana.traineddata",
+      "size_bytes": 6048323,
+      "checksum": "b13feb9f2af4762a80431e93de11e2e61ae40068",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Thai",
+      "name": "Thai script",
+      "kind": "script",
+      "script": "Thai",
+      "remote_path": "script/Thai.traineddata",
+      "size_bytes": 4249016,
+      "checksum": "62acc3de815e28c43f764dc7e10e5c8afdfefb20",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Tibetan",
+      "name": "Tibetan script",
+      "kind": "script",
+      "script": "Tibetan",
+      "remote_path": "script/Tibetan.traineddata",
+      "size_bytes": 5699531,
+      "checksum": "223459ad4ee20b85075e423975aa44edbed190dd",
+      "checksum_type": "git-blob-sha1"
+    },
+    {
+      "code": "script/Vietnamese",
+      "name": "Vietnamese script",
+      "kind": "script",
+      "script": "Vietnamese",
+      "remote_path": "script/Vietnamese.traineddata",
+      "size_bytes": 1667794,
+      "checksum": "92c69d17eab37670c3ffc0efce3f7918ef1d9468",
+      "checksum_type": "git-blob-sha1"
+    }
+  ]
+}
