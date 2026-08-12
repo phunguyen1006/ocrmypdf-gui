@@ -1,0 +1,9 @@
+ocrmypdf>=17.0
+PySide6>=6.7
+pikepdf>=8.0
+pillow>=10.0
+img2pdf>=0.5
+
+# Dev / build
+pytest>=8.0
+pyinstaller>=6.0

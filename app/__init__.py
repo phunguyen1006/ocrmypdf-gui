@@ -1,0 +1,1 @@
+"""OCRmyPDF GUI application package."""
