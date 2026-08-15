@@ -24,6 +24,21 @@ GRACEFUL_WAIT_MS = 35_000  # slightly more than the worker's own grace period
 CANCEL_MSG = '{"type": "cancel"}\n'
 
 
+def _worker_completed_successfully(job: Job, outcome: str, exit_code: int) -> bool:
+    """Accept the worker contract even if its final IPC event arrives late.
+
+    ``run_ocr_job`` returns zero only after publishing the output.  On Windows,
+    QProcess can occasionally emit ``finished`` before delivering the final
+    stdout notification.  Requiring only the event then mislabels a real,
+    readable output as ``Failed (exit code 0)``.
+    """
+    if exit_code != 0 or outcome in {"failed", "cancelled", "skipped"}:
+        return False
+    if outcome == "completed":
+        return True
+    return bool(job.output_path and Path(job.output_path).is_file())
+
+
 def _app_root() -> Path:
     """Project root in source tree (parent of the app package)."""
     return Path(__file__).resolve().parents[2]
@@ -387,9 +402,22 @@ class QueueManager(QObject):
         self.job_updated.emit(job)
 
     def _on_finished(self, process: QProcess, exit_code: int, exit_status) -> None:
-        # A final event may be buffered just before the process exits.
+        # Let queued readyRead notifications run once before finalizing. On
+        # Windows the process-exit notification can otherwise win the race
+        # against the worker's final ``completed`` JSON line.
         self._read_stdout(process)
         self._read_stderr(process)
+        QTimer.singleShot(0, lambda: self._finalize_finished(process, exit_code, exit_status))
+
+    def _finalize_finished(self, process: QProcess, exit_code: int, exit_status) -> None:
+        self._read_stdout(process)
+        self._read_stderr(process)
+        # Be tolerant of a final JSON event without a trailing newline.
+        buffer = self._buffers.get(process)
+        if buffer and buffer.strip():
+            final_line = bytes(buffer).decode("utf-8", errors="replace")
+            buffer.clear()
+            self._handle_event(process, final_line)
 
         job = self._job_by_process.pop(process, None)
         self._buffers.pop(process, None)
@@ -409,7 +437,7 @@ class QueueManager(QObject):
                 job.error_message = job.error_message or "Cancelled."
             elif outcome == "skipped":
                 job.set_status(JobStatus.SKIPPED)
-            elif outcome == "completed" and exit_code == 0:
+            elif _worker_completed_successfully(job, outcome, exit_code):
                 job.set_status(JobStatus.COMPLETED)
             else:
                 job.set_status(JobStatus.FAILED)
