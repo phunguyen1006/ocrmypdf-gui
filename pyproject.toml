@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ocrmypdf-gui"
-version = "0.1.0"
+version = "0.1.1"
 description = "Desktop GUI for OCRmyPDF on Windows - make scanned PDFs searchable"
 readme = "README.md"
 requires-python = ">=3.10"
