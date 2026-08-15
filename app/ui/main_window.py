@@ -64,11 +64,12 @@ PRESET_LABELS = {
 }
 
 LANGUAGE_LABELS = {
-    "auto": "Auto detect — per page",
+    "auto": "Auto detect — adaptive pages",
+    "chi_sim+vie": "Chinese (Simplified) + Vietnamese",
     "vie": "Vietnamese",
     "eng": "English",
     "vie+eng": "Vietnamese + English",
-    "custom": "Custom...",
+    "custom": "Choose multiple languages…",
 }
 
 
@@ -95,6 +96,7 @@ class MainWindow(QMainWindow):
         self._detected_results: dict[str, DocumentDetection] = {}
         self._resolved_languages: dict[str, list[str]] = {}
         self._preparing_languages = False
+        self._language_generation = 0
 
         self.queue = QueueManager(self)
         self.queue.set_concurrency(self.settings.concurrent_files)
@@ -205,9 +207,18 @@ class MainWindow(QMainWindow):
         self.lang_combo.setMinimumWidth(190)
         self.lang_combo.setAccessibleName("OCR language")
         self.lang_combo.setToolTip(
-            "Auto detect checks each page locally. Custom... opens the searchable language catalogue."
+            "Auto detect checks every page in short PDFs and representative pages in long PDFs."
         )
-        controls.addWidget(self.lang_combo, 1, 0)
+        language_row = QHBoxLayout()
+        language_row.setSpacing(6)
+        language_row.addWidget(self.lang_combo, 1)
+        self.language_picker_btn = QPushButton("Choose…")
+        self.language_picker_btn.setObjectName("quietButton")
+        self.language_picker_btn.setAccessibleName("Choose multiple OCR languages")
+        self.language_picker_btn.setToolTip("Select any combination from the complete Tesseract catalogue.")
+        self.language_picker_btn.clicked.connect(self._open_language_picker)
+        language_row.addWidget(self.language_picker_btn)
+        controls.addLayout(language_row, 1, 0)
 
         preset_label = QLabel("Preset")
         preset_label.setObjectName("mutedLabel")
@@ -276,15 +287,16 @@ class MainWindow(QMainWindow):
     def _populate_languages(self) -> None:
         self.lang_combo.blockSignals(True)
         self.lang_combo.clear()
-        installed = set(self.tesseract.languages())
         statuses = self.tesseract.statuses()
         choices: list[tuple[str, str]] = []
         choices.append((LANGUAGE_LABELS["auto"], "auto"))
         choices.extend(
             [
+                (LANGUAGE_LABELS["chi_sim+vie"], "chi_sim+vie"),
                 (LANGUAGE_LABELS["vie+eng"], "vie+eng"),
                 (LANGUAGE_LABELS["vie"], "vie"),
                 (LANGUAGE_LABELS["eng"], "eng"),
+                (self._custom_language_label(), "custom"),
             ]
         )
         preset_codes = {"vie+eng", "vie", "eng"}
@@ -295,8 +307,6 @@ class MainWindow(QMainWindow):
             if model.code in preset_codes:
                 continue
             choices.append((f"{model.name} ({model.code})  ·  {statuses.get(model.code, 'Available')}", model.code))
-        choices.append((LANGUAGE_LABELS["custom"], "custom"))
-
         for label, key in choices:
             self.lang_combo.addItem(label, key)
 
@@ -311,6 +321,19 @@ class MainWindow(QMainWindow):
         if not getattr(self, "_language_signal_connected", False):
             self.lang_combo.currentIndexChanged.connect(self._on_language_changed)
             self._language_signal_connected = True
+
+    def _custom_language_label(self) -> str:
+        codes = list(dict.fromkeys(self.settings.custom_languages))
+        if not codes:
+            return LANGUAGE_LABELS["custom"]
+        names = []
+        for code in codes[:3]:
+            model = self.tesseract.catalog_model(code)
+            names.append(model.name if model is not None else code)
+        suffix = ", ".join(names)
+        if len(codes) > 3:
+            suffix += f" +{len(codes) - 3}"
+        return f"Multiple — {suffix}"
 
     def _populate_presets(self) -> None:
         idx = self.preset_combo.findData(self.settings.preset)
@@ -449,6 +472,32 @@ class MainWindow(QMainWindow):
         self.settings.custom_languages = list(self.settings.custom_languages)
         return self.settings.to_json()
 
+    def _apply_current_settings_to_waiting(self, waiting: list[Job], snapshot: str) -> bool:
+        """Apply the controls as they look when Start OCR is pressed.
+
+        Jobs used to keep the settings from the moment the PDF was added.
+        Selecting Chinese + Vietnamese afterwards therefore had no effect and
+        arbitrary catalogue codes were decoded back to Auto detect.
+        """
+        waiting_ids = {job.id for job in waiting}
+        reserved_outputs = [
+            job.output_path
+            for job in self.queue.jobs()
+            if job.id not in waiting_ids and job.output_path
+        ]
+        for job in waiting:
+            pages, valid = self._resolve_pages(job.page_count, self.settings)
+            if not valid:
+                return False
+            job.pages = pages
+            job.settings_json = snapshot
+            job.output_path = str(
+                resolve_output_path(job.input, self.settings, reserved_paths=reserved_outputs)
+            )
+            reserved_outputs.append(job.output_path)
+            self.queue.job_updated.emit(job)
+        return True
+
     def _resolve_pages(
         self,
         page_count: int,
@@ -504,11 +553,13 @@ class MainWindow(QMainWindow):
             )
             return
 
-        self._snapshot_settings()
+        snapshot = self._snapshot_settings()
 
         waiting = [j for j in self.queue.jobs() if j.status == JobStatus.WAITING]
         if not waiting:
             QMessageBox.information(self, "Nothing to do", "Add PDF files to the queue first.")
+            return
+        if not self._apply_current_settings_to_waiting(waiting, snapshot):
             return
         self.queue.set_concurrency(self.settings.concurrent_files)
         self.store.save(self.settings)
@@ -591,7 +642,7 @@ class MainWindow(QMainWindow):
     # ---------------------------------------------------------------- signals
 
     def _on_job_updated(self, job: Job) -> None:
-        if job.status == JobStatus.PROCESSING:
+        if job.status in (JobStatus.PREPARING, JobStatus.PROCESSING):
             self.progress_panel.start_job(job.input.name, job.progress_total or job.page_count or 1)
             self.progress_panel.update_stage(job.stage)
             self.progress_panel.update_progress(job.progress_current, job.progress_total)
@@ -648,23 +699,35 @@ class MainWindow(QMainWindow):
         if key != "custom":
             self.settings.language_preset = key
             return
+        self._open_language_picker()
+
+    def _open_language_picker(self) -> None:
+        previous_key = self.settings.language_preset
         dialog = LanguagePickerDialog(self.tesseract, self.settings.custom_languages, self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             selected = dialog.selected_codes()
             if not selected:
                 QMessageBox.information(self, "Choose a language", "Select at least one OCR language model.")
-                self.lang_combo.setCurrentIndex(self.lang_combo.findData("auto"))
-                self.settings.language_preset = "auto"
+            else:
+                self.settings.custom_languages = selected
+                self.settings.language_preset = "custom"
+                self._populate_languages()
                 return
-            self.settings.custom_languages = selected
-            self.settings.language_preset = "custom"
+        self.lang_combo.blockSignals(True)
+        self.lang_combo.setCurrentIndex(max(0, self.lang_combo.findData(previous_key)))
+        self.lang_combo.blockSignals(False)
 
     # ------------------------------------------------------- language setup
 
     def _begin_language_preflight(self, waiting: list[Job]) -> None:
         """Detect and/or download models before starting the OCR queue."""
+        if self._preparing_languages:
+            return
+        self._language_generation += 1
+        generation = self._language_generation
         self._preflight_waiting = list(waiting)
         self._resolved_languages = {}
+        self.queue.begin_preparation(self._preflight_waiting)
         detection_jobs: list[tuple[str, Path, list[int] | None]] = []
         manual_codes: set[str] = set()
         for job in waiting:
@@ -682,25 +745,51 @@ class MainWindow(QMainWindow):
             service = LanguageDetectionService(self.tesseract)
             self._start_language_worker(
                 LanguageDetectionWorker(detection_jobs, service),
-                self._on_detection_finished,
+                lambda results, current_generation=generation: self._on_detection_finished(
+                    current_generation,
+                    results,
+                ),
+                generation,
             )
         else:
-            self._begin_language_download(manual_codes)
+            self._begin_language_download(manual_codes, generation)
 
-    def _start_language_worker(self, worker, finished_handler) -> None:
+    def _start_language_worker(self, worker, finished_handler, generation: int) -> None:
         thread = QThread(self)
         worker.moveToThread(thread)
         thread.started.connect(worker.run)
         worker.finished.connect(finished_handler)
         worker.finished.connect(thread.quit)
-        worker.failed.connect(self._on_language_failed)
+        worker.failed.connect(
+            lambda message, current_generation=generation: self._on_language_failed(
+                current_generation,
+                message,
+            )
+        )
         worker.failed.connect(thread.quit)
-        worker.cancelled.connect(self._on_language_cancelled)
+        worker.cancelled.connect(
+            lambda current_generation=generation: self._on_language_cancelled(current_generation)
+        )
         worker.cancelled.connect(thread.quit)
         if isinstance(worker, LanguageDownloadWorker):
-            worker.progress.connect(self._on_download_progress)
+            worker.progress.connect(
+                lambda code, current, total, current_generation=generation: self._on_download_progress(
+                    current_generation,
+                    code,
+                    current,
+                    total,
+                )
+            )
         else:
-            worker.progress.connect(self._on_detection_progress)
+            worker.progress.connect(
+                lambda job_id, current, total, message, current_generation=generation: self._on_detection_progress(
+                    current_generation,
+                    job_id,
+                    current,
+                    total,
+                    message,
+                )
+            )
         thread.finished.connect(worker.deleteLater)
         thread.finished.connect(lambda current_thread=thread: self._on_language_thread_finished(current_thread))
         self._language_thread = thread
@@ -712,10 +801,24 @@ class MainWindow(QMainWindow):
             self._language_worker = None
             self._language_thread = None
 
-    def _on_detection_progress(self, current: int, total: int, message: str) -> None:
+    def _on_detection_progress(
+        self,
+        generation: int,
+        job_id: str,
+        current: int,
+        total: int,
+        message: str,
+    ) -> None:
+        if generation != self._language_generation or not self._preparing_languages:
+            return
+        job = next((candidate for candidate in self._preflight_waiting if candidate.id == job_id), None)
+        if job is not None:
+            self.queue.update_preparation(job, message, current, total)
         self.statusBar().showMessage(f"{message} ({current}/{total})")
 
-    def _on_detection_finished(self, results: dict[str, DocumentDetection]) -> None:
+    def _on_detection_finished(self, generation: int, results: dict[str, DocumentDetection]) -> None:
+        if generation != self._language_generation or not self._preparing_languages:
+            return
         self._detected_results = results
         manual_codes: set[str] = set()
         try:
@@ -732,7 +835,7 @@ class MainWindow(QMainWindow):
                 if detection.needs_review:
                     dialog = LanguageReviewDialog(Path(job.input_path).name, detection, self.tesseract, self)
                     if dialog.exec() != QDialog.DialogCode.Accepted:
-                        self._abort_language_preflight("Language selection cancelled.")
+                        self._abort_language_preflight("Language selection cancelled.", generation)
                         return
                     codes = dialog.selected_codes()
                 if not codes:
@@ -740,16 +843,18 @@ class MainWindow(QMainWindow):
                 self._resolved_languages[job.id] = list(dict.fromkeys(codes))
                 manual_codes.update(codes)
         except Exception as exc:  # noqa: BLE001 - keep the queue idle on preflight errors
-            self._on_language_failed(str(exc))
+            self._on_language_failed(generation, str(exc))
             return
-        self._begin_language_download(manual_codes)
+        self._begin_language_download(manual_codes, generation)
 
-    def _begin_language_download(self, codes: set[str]) -> None:
+    def _begin_language_download(self, codes: set[str], generation: int) -> None:
+        if generation != self._language_generation or not self._preparing_languages:
+            return
         codes = {str(code).strip() for code in codes if str(code).strip()}
         try:
             missing = [code for code in sorted(codes) if self.tesseract.status(code) == "Available"]
         except Exception as exc:  # noqa: BLE001 - invalid legacy settings must be recoverable
-            self._on_language_failed(f"Unknown OCR language selection: {exc}")
+            self._on_language_failed(generation, f"Unknown OCR language selection: {exc}")
             return
         self._download_codes = list(codes)
         if missing:
@@ -759,28 +864,41 @@ class MainWindow(QMainWindow):
             ]
             if no_download:
                 self._on_language_failed(
+                    generation,
                     "Missing language model(s): " + ", ".join(missing) + ". Enable automatic downloads in Advanced Settings."
                 )
                 return
             self._set_language_preparing(True, f"Downloading {len(missing)} language model(s)…")
             self._start_language_worker(
                 LanguageDownloadWorker(self.tesseract, missing),
-                self._on_download_finished,
+                lambda paths, current_generation=generation: self._on_download_finished(
+                    current_generation,
+                    paths,
+                ),
+                generation,
             )
             return
-        self._finish_language_preflight()
+        self._finish_language_preflight(generation)
 
-    def _on_download_progress(self, code: str, current: int, total: int) -> None:
+    def _on_download_progress(self, generation: int, code: str, current: int, total: int) -> None:
+        if generation != self._language_generation or not self._preparing_languages:
+            return
+        for job in self._preflight_waiting:
+            self.queue.update_preparation(job, f"Downloading {code}", current, total)
         if total:
             self.statusBar().showMessage(f"Downloading {code}: {current / total:.0%}")
         else:
             self.statusBar().showMessage(f"Downloading {code}…")
 
-    def _on_download_finished(self, _paths) -> None:
+    def _on_download_finished(self, generation: int, _paths) -> None:
+        if generation != self._language_generation or not self._preparing_languages:
+            return
         self.tesseract.refresh()
-        self._finish_language_preflight()
+        self._finish_language_preflight(generation)
 
-    def _finish_language_preflight(self) -> None:
+    def _finish_language_preflight(self, generation: int) -> None:
+        if generation != self._language_generation or not self._preparing_languages:
+            return
         for job in self._preflight_waiting:
             codes = self._resolved_languages.get(job.id)
             if not codes:
@@ -789,28 +907,48 @@ class MainWindow(QMainWindow):
             settings.language_preset = "custom"
             settings.custom_languages = codes
             job.settings_json = json.dumps(settings.to_dict(), ensure_ascii=False)
+        prepared_jobs = list(self._preflight_waiting)
+        self.queue.finish_preparation(prepared_jobs)
         self._set_language_preparing(False, "Language models ready.")
         self.store.save(self.settings)
+        self._preflight_waiting = []
+        self._resolved_languages = {}
         self.queue.start()
 
     def _set_language_preparing(self, preparing: bool, message: str = "") -> None:
         self._preparing_languages = preparing
-        for widget in (self.start_btn, self.advanced_btn, self.lang_combo, self.preset_combo):
+        for widget in (
+            self.start_btn,
+            self.advanced_btn,
+            self.lang_combo,
+            self.language_picker_btn,
+            self.preset_combo,
+        ):
             widget.setEnabled(not preparing)
         self.cancel_btn.setEnabled(preparing)
         if message:
             self.statusBar().showMessage(message)
 
-    def _abort_language_preflight(self, message: str) -> None:
+    def _abort_language_preflight(self, message: str, generation: int | None = None) -> None:
+        if generation is not None and generation != self._language_generation:
+            return
+        jobs = list(self._preflight_waiting)
+        self._language_generation += 1
+        self.queue.finish_preparation(jobs)
         self._set_language_preparing(False, message)
         self._preflight_waiting = []
         self._resolved_languages = {}
 
-    def _on_language_cancelled(self) -> None:
-        self._abort_language_preflight("Language preparation cancelled.")
+    def _on_language_cancelled(self, generation: int) -> None:
+        self._abort_language_preflight("Language preparation cancelled.", generation)
 
-    def _on_language_failed(self, message: str) -> None:
+    def _on_language_failed(self, generation: int, message: str) -> None:
+        if generation != self._language_generation or not self._preparing_languages:
+            return
+        failed_jobs = list(self._preflight_waiting)
+        self._language_generation += 1
         self._set_language_preparing(False)
+        self.queue.fail_preparation(failed_jobs, message)
         box = QMessageBox(self)
         box.setIcon(QMessageBox.Icon.Warning)
         box.setWindowTitle("Language preparation failed")
@@ -823,7 +961,12 @@ class MainWindow(QMainWindow):
         box.addButton(QMessageBox.StandardButton.Cancel)
         box.exec()
         if box.clickedButton() is retry:
-            self._begin_language_preflight(self._preflight_waiting)
+            for job in failed_jobs:
+                self.queue.retry(job)
+            QTimer.singleShot(0, lambda jobs=failed_jobs: self._begin_language_preflight(jobs))
+        else:
+            self._preflight_waiting = []
+            self._resolved_languages = {}
 
     def _settings_for_job(self, job: Job) -> AppSettings:
         try:
@@ -869,7 +1012,7 @@ class MainWindow(QMainWindow):
             self.log_panel.view.appendPlainText(job.error_detail)
 
     def _tick(self) -> None:
-        if self.queue.is_running():
+        if self.queue.is_running() or self._preparing_languages:
             self.progress_panel.update_eta()
             running = [j for j in self.queue.jobs() if j.status == JobStatus.PROCESSING]
             for job in running:
@@ -879,8 +1022,6 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------ close
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        if self._language_worker is not None and hasattr(self._language_worker, "cancel"):
-            self._language_worker.cancel()
         if self.queue.has_pending():
             answer = QMessageBox.question(
                 self,
@@ -891,6 +1032,8 @@ class MainWindow(QMainWindow):
             if answer != QMessageBox.StandardButton.Yes:
                 event.ignore()
                 return
+        if self._language_worker is not None and hasattr(self._language_worker, "cancel"):
+            self._language_worker.cancel()
         self._eta_timer.stop()
         self.queue.stop_all()
         self.store.save(self.settings)

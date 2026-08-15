@@ -17,6 +17,7 @@ from app.models.job import Job, JobStatus
 
 _STATUS_COLORS = {
     JobStatus.WAITING: "#8a8a8a",
+    JobStatus.PREPARING: "#111111",
     JobStatus.PROCESSING: "#111111",
     JobStatus.COMPLETED: "#111111",
     JobStatus.FAILED: "#9f1d1d",
@@ -108,10 +109,15 @@ class JobWidget(QWidget):
             parts.append("image scan")
         detail = "  |  ".join(parts)
 
-        if job.status == JobStatus.PROCESSING and job.progress_total:
+        if job.status in (JobStatus.PREPARING, JobStatus.PROCESSING) and job.progress_total:
             pct = int(job.progress_current * 100 / job.progress_total) if job.progress_total else 0
             detail += f"  |  {job.stage} {job.progress_current} / {job.progress_total} ({pct}%)"
+            self.progress.setRange(0, 100)
             self.progress.setValue(pct)
+            self.progress.show()
+        elif job.status == JobStatus.PREPARING:
+            detail += f"  |  {job.stage or 'Preparing languages'}"
+            self.progress.setRange(0, 0)
             self.progress.show()
         elif job.status == JobStatus.COMPLETED and job.output_path:
             detail += f"  |  Output: {Path(job.output_path).name}"
@@ -119,7 +125,8 @@ class JobWidget(QWidget):
         elif job.status == JobStatus.FAILED:
             detail += "  |  " + (job.error_message or "Failed")
         self.detail_label.setText(detail)
-        if job.status != JobStatus.PROCESSING:
+        if job.status not in (JobStatus.PREPARING, JobStatus.PROCESSING):
+            self.progress.setRange(0, 100)
             self.progress.hide()
 
         color = _STATUS_COLORS.get(job.status, "#8a8a8a")
@@ -132,5 +139,5 @@ class JobWidget(QWidget):
         self.log_btn.setVisible(terminal and job.status == JobStatus.FAILED)
         self.remove_btn.setVisible(terminal)
 
-        if job.status == JobStatus.PROCESSING:
+        if job.status in (JobStatus.PREPARING, JobStatus.PROCESSING):
             self.status_label.setText(f"{job.stage} • {job.status.value}")

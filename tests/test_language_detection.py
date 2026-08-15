@@ -22,6 +22,21 @@ def test_infer_simplified_chinese_and_vietnamese_without_network(tmp_path: Path)
     assert candidates == []
 
 
+def test_mixed_han_vietnamese_does_not_add_statistical_noise(tmp_path: Path) -> None:
+    service = LanguageDetectionService(TesseractService(), tmp_path / "cache")
+    service._language_scores = lambda *_args: {"jpn": 0.99, "swa": 0.95}  # type: ignore[method-assign]
+    text = "\u8fd9\u662f\u4e00\u4e2a\u4e2d\u6587\u8bfe\u3002 B\u00e0i h\u1ecdc ti\u1ebfng Vi\u1ec7t."
+
+    languages, _confidence, candidates = service._infer_languages(
+        text,
+        "han",
+        ["vie", "eng", "chi_sim", "chi_tra"],
+    )
+
+    assert languages == ["chi_sim", "vie"]
+    assert candidates == []
+
+
 def test_low_confidence_detection_requires_review(tmp_path: Path) -> None:
     page = PageDetection(1, ("vie",), 0.4, "latin")
     detection = DocumentDetection(("vie",), 0.4, (page,))
@@ -95,3 +110,18 @@ def test_detection_rejects_missing_pdf(tmp_path: Path) -> None:
     service = LanguageDetectionService(TesseractService(), tmp_path / "cache")
     with pytest.raises(Exception, match="PDF not found"):
         service.detect_document(tmp_path / "missing.pdf")
+
+
+def test_long_documents_use_even_adaptive_sampling(tmp_path: Path) -> None:
+    service = LanguageDetectionService(TesseractService(), tmp_path / "cache", max_raster_probes=12)
+    selected = service._adaptive_probe_pages(list(range(1, 239)))
+    assert len(selected) == 12
+    assert selected[0] == 1
+    assert selected[-1] == 238
+    assert selected == sorted(set(selected))
+
+
+def test_short_watermark_text_does_not_override_scanned_content(tmp_path: Path) -> None:
+    service = LanguageDetectionService(TesseractService(), tmp_path / "cache")
+    watermark = "http://example.test\nExample watermark"
+    assert service._has_meaningful_embedded_text(watermark) is False

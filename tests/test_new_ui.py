@@ -44,10 +44,51 @@ def test_language_picker_lists_catalogue_without_network(qapp) -> None:
     dialog = LanguagePickerDialog(TesseractService(), AppSettings().custom_languages)
     assert len(dialog._models) == 126
     assert dialog.list_widget.count() == 126
+    assert dialog.selected_label.text().startswith("Selected: 2")
     dialog.search_edit.setText("Chinese")
     qapp.processEvents()
     assert dialog.list_widget.count() >= 2
     dialog.close()
+
+
+def test_main_language_controls_keep_multi_language_choice_visible(qapp, tmp_path: Path) -> None:
+    from app.models.settings import AppSettings, SettingsStore
+    from app.services.history_service import HistoryService
+    from app.ui.main_window import MainWindow
+
+    store = SettingsStore(ini_path=tmp_path / "settings.ini")
+    store.set_first_run_done(True)
+    store.save(AppSettings(language_preset="chi_sim+vie"))
+    window = MainWindow(store=store, history=HistoryService(tmp_path / "history.db"))
+    assert window.lang_combo.currentData() == "chi_sim+vie"
+    assert "Chinese" in window.lang_combo.currentText()
+    assert window.lang_combo.findData("custom") < 6
+    assert not window.language_picker_btn.isHidden()
+    window.close()
+
+
+def test_start_snapshot_uses_language_selected_after_file_was_added(qapp, tmp_path: Path) -> None:
+    import json
+
+    from app.models.job import Job
+    from app.models.settings import AppSettings, SettingsStore
+    from app.services.history_service import HistoryService
+    from app.ui.main_window import MainWindow
+
+    store = SettingsStore(ini_path=tmp_path / "settings.ini")
+    store.set_first_run_done(True)
+    window = MainWindow(store=store, history=HistoryService(tmp_path / "history.db"))
+    pdf = tmp_path / "book.pdf"
+    pdf.write_bytes(b"%PDF-1.4\n%%EOF")
+    job = Job(str(pdf), settings_json=AppSettings(language_preset="auto").to_json(), page_count=1)
+    window.queue.enqueue([job])
+
+    window.lang_combo.setCurrentIndex(window.lang_combo.findData("chi_sim+vie"))
+    snapshot = window._snapshot_settings()
+    assert window._apply_current_settings_to_waiting([job], snapshot)
+    assert json.loads(job.settings_json)["language_preset"] == "chi_sim+vie"
+    window.queue.remove_job(job)
+    window.close()
 
 
 def test_low_confidence_review_dialog_has_candidate_checkboxes(qapp) -> None:

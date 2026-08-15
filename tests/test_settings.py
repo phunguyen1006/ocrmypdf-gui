@@ -47,3 +47,9 @@ def test_auto_language_settings_round_trip() -> None:
 
 def test_new_settings_default_to_per_page_auto_detect() -> None:
     assert AppSettings().language_preset == "auto"
+
+
+def test_catalogue_and_combined_language_presets_are_not_reset_to_auto() -> None:
+    assert AppSettings.from_dict({"language_preset": "chi_sim"}).language_preset == "chi_sim"
+    assert AppSettings.from_dict({"language_preset": "chi_sim+vie"}).language_preset == "chi_sim+vie"
+    assert AppSettings.from_dict({"language_preset": "bad language!"}).language_preset == "auto"

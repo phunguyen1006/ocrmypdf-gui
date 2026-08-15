@@ -10,6 +10,7 @@ from pathlib import Path
 
 class JobStatus(str, Enum):
     WAITING = "Waiting"
+    PREPARING = "Preparing"
     PROCESSING = "Processing"
     COMPLETED = "Completed"
     FAILED = "Failed"
@@ -19,7 +20,8 @@ class JobStatus(str, Enum):
 
 #: Allowed transitions, used by the queue manager.
 JOB_TRANSITIONS: dict[JobStatus, set[JobStatus]] = {
-    JobStatus.WAITING: {JobStatus.PROCESSING, JobStatus.CANCELLED, JobStatus.SKIPPED},
+    JobStatus.WAITING: {JobStatus.PREPARING, JobStatus.PROCESSING, JobStatus.CANCELLED, JobStatus.SKIPPED},
+    JobStatus.PREPARING: {JobStatus.WAITING, JobStatus.PROCESSING, JobStatus.FAILED, JobStatus.CANCELLED},
     JobStatus.PROCESSING: {JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED},
     JobStatus.COMPLETED: {JobStatus.WAITING},  # retry
     JobStatus.FAILED: {JobStatus.WAITING},  # retry

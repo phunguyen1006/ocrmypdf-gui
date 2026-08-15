@@ -21,7 +21,7 @@ log = logging.getLogger("app.language_workers")
 class LanguageDetectionWorker(QObject):
     """Run one or more document detections away from the Qt GUI thread."""
 
-    progress = Signal(int, int, str)
+    progress = Signal(str, int, int, str)  # job id, current page, sampled pages, message
     finished = Signal(object)  # dict[str, DocumentDetection]
     failed = Signal(str)
     cancelled = Signal()
@@ -36,13 +36,12 @@ class LanguageDetectionWorker(QObject):
     def run(self) -> None:
         results: dict[str, DocumentDetection] = {}
         try:
-            total = len(self.jobs)
-            for index, (job_id, path, pages) in enumerate(self.jobs, start=1):
+            for job_id, path, pages in self.jobs:
                 if self.cancel_event.is_set():
                     raise DetectionCancelled("Language detection cancelled.")
 
-                def report(_current: int, _page_total: int, message: str) -> None:
-                    self.progress.emit(index, total, message)
+                def report(current: int, page_total: int, message: str) -> None:
+                    self.progress.emit(job_id, current, page_total, message)
 
                 results[job_id] = self.service.detect_document(
                     path,

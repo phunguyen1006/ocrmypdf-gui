@@ -198,6 +198,47 @@ def _cleanup_stale_tmp() -> None:
         pass
 
 
+def _publish_staged_file(staged_path: Path, final_path: Path, token: str) -> None:
+    """Publish a completed artifact without assuming both paths share a drive.
+
+    The OCR work directory normally lives under ``%LOCALAPPDATA%``.  A plain
+    ``Path.replace`` therefore fails for outputs on Google Drive, network
+    drives, USB disks, or any other volume.  Try the fast same-volume rename
+    first; on a cross-volume error copy to a hidden ``.part`` file *inside the
+    destination directory* and rename that file atomically.
+    """
+    final_path.parent.mkdir(parents=True, exist_ok=True)
+    if final_path.exists():
+        raise FileExistsError(str(final_path))
+    try:
+        staged_path.rename(final_path)
+        return
+    except OSError:
+        if final_path.exists():
+            raise FileExistsError(str(final_path))
+
+    part_path = final_path.with_name(f".{final_path.name}.{token}.part")
+    try:
+        part_path.unlink(missing_ok=True)
+        with staged_path.open("rb") as source, part_path.open("xb") as destination:
+            shutil.copyfileobj(source, destination, length=1024 * 1024)
+            destination.flush()
+            try:
+                os.fsync(destination.fileno())
+            except OSError:
+                # Some cloud-backed filesystems do not implement fsync.
+                pass
+        if final_path.exists():
+            raise FileExistsError(str(final_path))
+        part_path.rename(final_path)
+    except Exception:
+        try:
+            part_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+        raise
+
+
 def run_ocr_job(job: Job, settings: AppSettings) -> int:
     """Execute one OCR job. Returns a process exit code (0 on success)."""
     input_path = Path(job.input_path)
@@ -350,14 +391,11 @@ def run_ocr_job(job: Job, settings: AppSettings) -> int:
     # after the pipeline has succeeded, so a crash cannot corrupt the user's
     # destination file.
     try:
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        if output_path.exists():
-            raise FileExistsError(str(output_path))
         if final_sidecar_path is not None and final_sidecar_path.exists():
             raise FileExistsError(str(final_sidecar_path))
-        staged_output_path.replace(output_path)
+        _publish_staged_file(staged_output_path, output_path, job.id)
         if staged_sidecar_path is not None and staged_sidecar_path.exists() and final_sidecar_path is not None:
-            staged_sidecar_path.replace(final_sidecar_path)
+            _publish_staged_file(staged_sidecar_path, final_sidecar_path, job.id)
     except Exception as exc:  # noqa: BLE001 - surface as a friendly event
         progress.emit_failed(
             exc_utils.friendly_exception_message(exc),

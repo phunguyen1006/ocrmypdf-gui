@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import asdict, dataclass, field, fields
 from enum import Enum
 from pathlib import Path
@@ -109,7 +110,18 @@ class AppSettings:
             allowed = {member.value for member in enum_type}
             filtered[name] = value if value in allowed else getattr(defaults, name)
 
-        _enum_value("language_preset", LanguagePreset)
+        language_preset = str(filtered.get("language_preset", defaults.language_preset)).strip()
+        # The main picker also exposes every official Tesseract model and
+        # arbitrary ``code+code`` combinations.  Restricting this value to
+        # LanguagePreset used to silently turn selections such as ``chi_sim``
+        # back into ``auto`` when a job snapshot was decoded.
+        if language_preset in {member.value for member in LanguagePreset} or re.fullmatch(
+            r"[A-Za-z0-9_]+(?:\+[A-Za-z0-9_]+)*",
+            language_preset,
+        ):
+            filtered["language_preset"] = language_preset
+        else:
+            filtered["language_preset"] = defaults.language_preset
         _enum_value("preset", OcrPreset)
         _enum_value("ocr_mode", OcrMode)
         _enum_value("output_type", OutputType)

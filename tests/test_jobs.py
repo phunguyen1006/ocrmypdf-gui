@@ -26,3 +26,10 @@ def test_job_json_round_trip_restores_enum_and_pages() -> None:
     restored = Job.from_dict(json.loads(original.to_json()))
     assert restored.status is JobStatus.CANCELLED
     assert restored.pages == [1, 3]
+
+
+def test_job_preparation_is_visible_and_can_return_to_waiting() -> None:
+    job = Job("scan.pdf")
+    job.set_status(JobStatus.PREPARING)
+    job.set_status(JobStatus.WAITING)
+    assert job.status is JobStatus.WAITING

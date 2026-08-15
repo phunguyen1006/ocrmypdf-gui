@@ -9,7 +9,7 @@ chọn ngôn ngữ và nhận một PDF có thể tìm kiếm, chọn và sao ch
 - Queue theo từng file, không chạy OCR trên GUI thread.
 - OCR chạy trong process riêng, có progress theo stage, ETA, log và Cancel.
 - Ngôn ngữ tiếng Việt, tiếng Anh, toàn bộ catalogue Tesseract và lựa chọn custom.
-- Auto detect ngôn ngữ theo từng trang, lazy-download model và cache trong app data.
+- Auto detect ngôn ngữ thích ứng: mọi trang với PDF ngắn, các trang đại diện với PDF dài; lazy-download model và cache trong app data.
 - Preset Quick, Standard và Difficult Scan.
 - OCR mode Skip, Redo và Force.
 - Chọn page range, loại trừ trang, sidecar TXT, PDF/PDF-A và tối ưu PDF.
@@ -156,11 +156,13 @@ the pinned official source. Files are written to a user-scoped cache at
 size and Git blob SHA-1 before an atomic rename. The app never writes to
 `C:\Program Files\Tesseract-OCR` and does not require Administrator access.
 
-Choose `Auto detect — per page` for a multilingual PDF. Detection runs locally
-with pypdfium2, Tesseract OSD/script probing, and the offline Lingua detector;
-PDF contents are never uploaded. Results are cached per file/page. A confident
-result silently prepares missing models. Ambiguous results show a candidate
-dialog so the user can confirm the languages before OCR begins.
+Choose `Auto detect — adaptive pages` for a multilingual PDF. Detection runs
+locally with pypdfium2, Tesseract script probing, and the offline Lingua
+detector; PDF contents are never uploaded. Short PDFs are checked page by page,
+while long textbooks use evenly distributed representative pages so the queue
+does not remain at `Waiting` for minutes. Results are cached per file/page. A
+confident result silently prepares missing models. Ambiguous results show a
+candidate dialog so the user can confirm the languages before OCR begins.
 
 The Advanced Settings window is resizable, vertically scrollable on small
 screens, and keeps its OK/Cancel footer visible. OCR workers, language probes,

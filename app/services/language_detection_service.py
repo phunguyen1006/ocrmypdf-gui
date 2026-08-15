@@ -14,6 +14,7 @@ import logging
 import re
 import subprocess
 import tempfile
+import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from threading import Event
@@ -27,6 +28,8 @@ log = logging.getLogger("app.language_detection")
 
 ProgressCallback = Callable[[int, int, str], None]
 REVIEW_CONFIDENCE_THRESHOLD = 0.72
+MAX_RASTER_PROBES = 8
+MIN_EMBEDDED_TEXT_CHARS = 180
 
 
 class LanguageDetectionError(RuntimeError):
@@ -120,12 +123,14 @@ class LanguageDetectionService:
         self,
         tesseract: TesseractService | None = None,
         cache_dir: Path | None = None,
+        max_raster_probes: int = MAX_RASTER_PROBES,
     ) -> None:
         self.tesseract = tesseract or TesseractService()
         self.cache_dir = Path(cache_dir) if cache_dir is not None else app_data_dir() / "language-detection"
         self._lingua_detector = None
         self._lingua_code_by_language: dict[object, str] = {}
         self._catalog_lingua_code_list: tuple[str, ...] | None = None
+        self.max_raster_probes = max(1, int(max_raster_probes))
 
     def detect_document(
         self,
@@ -137,10 +142,11 @@ class LanguageDetectionService:
     ) -> DocumentDetection:
         """Return detected languages, confidence and per-page details.
 
-        ``pages`` uses the same one-based page numbering as the queue. When it
-        is omitted all pages are inspected. Detection results are keyed by the
-        input path, size, mtime and page number, so changing the PDF naturally
-        invalidates the local cache.
+        ``pages`` uses the same one-based page numbering as the queue. Short
+        documents are inspected page by page; long documents use evenly
+        distributed representative pages so preparation cannot monopolize the
+        queue for several minutes. Results are keyed by the input path, size,
+        mtime and page number, so changing the PDF invalidates the local cache.
         """
         path = Path(pdf_path)
         if not path.is_file():
@@ -164,17 +170,24 @@ class LanguageDetectionService:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         cache_path = self.cache_dir / f"{self._cache_key(path)}.json"
         cached = self._load_cache(cache_path)
+        cached_pages = [page for page in selected if str(page) in cached]
+        uncached_pages = [page for page in selected if str(page) not in cached]
+        pages_to_probe = sorted(set(cached_pages + self._adaptive_probe_pages(uncached_pages)))
         page_results: list[PageDetection] = []
-        total = len(selected)
+        total = len(pages_to_probe)
         try:
-            for index, page_number in enumerate(selected, start=1):
+            for index, page_number in enumerate(pages_to_probe, start=1):
                 self._check_cancel(cancel_event)
                 result = cached.get(str(page_number))
                 if result is None:
                     image_path: Path | None = None
                     try:
-                        image_path = self._render_page(document, page_number)
-                        result = self._detect_page(image_path)
+                        embedded_text = self._extract_embedded_text(document, page_number)
+                        if self._has_meaningful_embedded_text(embedded_text):
+                            result = self._detect_embedded_text(embedded_text)
+                        else:
+                            image_path = self._render_page(document, page_number)
+                            result = self._detect_page(image_path, cancel_event=cancel_event)
                     finally:
                         if image_path is not None:
                             try:
@@ -201,7 +214,8 @@ class LanguageDetectionService:
                     )
                 page_results.append(page_result)
                 if progress is not None:
-                    progress(index, total, f"Detecting page {page_number} of {page_count}")
+                    action = "Detecting" if len(selected) <= self.max_raster_probes else "Sampling"
+                    progress(index, total, f"{action} page {page_number} of {page_count}")
             self._write_cache(cache_path, cached)
         finally:
             try:
@@ -210,6 +224,53 @@ class LanguageDetectionService:
                 pass
 
         return self._combine(page_results)
+
+    def _adaptive_probe_pages(self, pages: list[int]) -> list[int]:
+        """Inspect every short document and representative pages of long ones."""
+        if len(pages) <= self.max_raster_probes:
+            return list(pages)
+        if self.max_raster_probes == 1:
+            return [pages[0]]
+        last = len(pages) - 1
+        indexes = {
+            round(index * last / (self.max_raster_probes - 1))
+            for index in range(self.max_raster_probes)
+        }
+        return [pages[index] for index in sorted(indexes)]
+
+    @staticmethod
+    def _extract_embedded_text(document, page_number: int) -> str:
+        page = None
+        text_page = None
+        try:
+            page = document.get_page(page_number - 1)
+            text_page = page.get_textpage()
+            return str(text_page.get_text_range() or "")
+        except Exception:
+            return ""
+        finally:
+            if text_page is not None:
+                try:
+                    text_page.close()
+                except Exception:
+                    pass
+            if page is not None:
+                try:
+                    page.close()
+                except Exception:
+                    pass
+
+    @staticmethod
+    def _has_meaningful_embedded_text(text: str) -> bool:
+        without_urls = re.sub(r"https?://\S+", " ", text, flags=re.IGNORECASE)
+        meaningful = [character for character in without_urls if character.isalpha()]
+        return len(meaningful) >= MIN_EMBEDDED_TEXT_CHARS
+
+    def _detect_embedded_text(self, text: str) -> PageDetection:
+        probe_codes = ["chi_sim", "chi_tra", "vie", "eng"]
+        languages, confidence, candidates = self._infer_languages(text, "", probe_codes)
+        script = "han" if _CJK_RE.search(text) else ("latin" if _LATIN_RE.search(text) else "")
+        return PageDetection(0, tuple(languages), confidence, script, tuple(candidates))
 
     def _render_page(self, document, page_number: int) -> Path:
         try:
@@ -232,45 +293,33 @@ class LanguageDetectionService:
         except Exception as exc:  # noqa: BLE001
             raise LanguageDetectionError(f"Could not render a PDF page: {exc}") from exc
 
-    def _detect_page(self, image_path: Path) -> PageDetection:
+    def _detect_page(self, image_path: Path, *, cancel_event: Event | None = None) -> PageDetection:
         exe = self.tesseract.tesseract_path()
         if not exe:
             raise LanguageDetectionError(
                 "Tesseract was not found. Install Tesseract before using Auto detect."
             )
 
-        script, script_confidence = self._detect_script(exe, image_path)
-        # OSD is intentionally conservative: short pages often produce a
-        # wrong script with a very low confidence. Let the multilingual probe
-        # decide in that case instead of downloading the wrong model.
-        if script_confidence < 30.0:
-            script = ""
         available = set(self.tesseract.languages())
-        preferred = list(self._script_candidates_for(script))
-        if not script:
-            # Put Han models first. Tesseract's legacy multi-model selection
-            # is order-sensitive on Windows; this ordering preserves CJK text
-            # while still giving Lingua a Latin probe for Vietnamese/English.
-            probe_codes = [code for code in ("chi_sim", "chi_tra", "vie", "eng") if code in available]
-        elif "latin" in script.lower():
-            # Keep Han models in the probe too: a page may contain a Latin
-            # paragraph and a Chinese table or heading.
-            probe_codes = [code for code in ("chi_sim", "chi_tra") if code in available]
-            probe_codes.extend(code for code in preferred if code in available and code not in probe_codes)
-            probe_codes.extend(code for code in ("vie", "eng") if code in available and code not in probe_codes)
-        else:
-            probe_codes = [code for code in preferred if code in available]
-            probe_codes.extend(
-                code for code in ("chi_sim", "chi_tra", "vie", "eng")
-                if code in available and code not in probe_codes
-            )
+        # A single multilingual OCR pass handles the common CJK/Latin case.
+        # OSD is only needed when that pass is inconclusive, cutting the
+        # normal Auto detect cost roughly in half.
+        probe_codes = [code for code in ("chi_sim", "chi_tra", "vie", "eng") if code in available]
         if not probe_codes:
             probe_codes = sorted(code for code in available if code != "osd")[:3]
         if not probe_codes:
             raise LanguageDetectionError("No Tesseract language model is available for the detection probe.")
 
-        text = self._ocr_probe(exe, image_path, probe_codes)
-        languages, confidence, candidates = self._infer_languages(text, script, probe_codes)
+        text = self._ocr_probe(exe, image_path, probe_codes, cancel_event=cancel_event)
+        inferred_script = "han" if _CJK_RE.search(text) else ("latin" if _LATIN_RE.search(text) else "")
+        languages, confidence, candidates = self._infer_languages(text, inferred_script, probe_codes)
+        script = inferred_script
+        script_confidence = 0.0
+        if not languages or confidence < REVIEW_CONFIDENCE_THRESHOLD:
+            script, script_confidence = self._detect_script(exe, image_path, cancel_event=cancel_event)
+            if script_confidence < 30.0:
+                script = inferred_script
+            languages, confidence, candidates = self._infer_languages(text, script, probe_codes)
         if not languages and script and script_confidence >= 30.0:
             script_candidates = [code for code in self._script_candidates_for(script) if self.tesseract.catalog_model(code)]
             if len(script_candidates) == 1:
@@ -288,11 +337,17 @@ class LanguageDetectionService:
             candidates=tuple(candidates),
         )
 
-    def _detect_script(self, exe: str, image_path: Path) -> tuple[str, float]:
+    def _detect_script(
+        self,
+        exe: str,
+        image_path: Path,
+        *,
+        cancel_event: Event | None = None,
+    ) -> tuple[str, float]:
         if "osd" not in set(self.tesseract.languages()):
             return "", 0.0
         try:
-            output = self._run_tesseract(exe, image_path, "osd", psm="0")
+            output = self._run_tesseract(exe, image_path, "osd", psm="0", cancel_event=cancel_event)
         except LanguageDetectionError:
             # OSD legitimately fails on very short or low-resolution pages.
             # The multilingual probe below remains useful and does not need
@@ -304,26 +359,69 @@ class LanguageDetectionService:
         confidence = float(confidence_match.group(1)) if confidence_match else 0.0
         return script, confidence
 
-    def _ocr_probe(self, exe: str, image_path: Path, codes: list[str]) -> str:
-        return self._run_tesseract(exe, image_path, "+".join(codes), psm="6")
+    def _ocr_probe(
+        self,
+        exe: str,
+        image_path: Path,
+        codes: list[str],
+        *,
+        cancel_event: Event | None = None,
+    ) -> str:
+        return self._run_tesseract(
+            exe,
+            image_path,
+            "+".join(codes),
+            psm="6",
+            cancel_event=cancel_event,
+        )
 
-    def _run_tesseract(self, exe: str, image_path: Path, languages: str, *, psm: str) -> str:
-        command = [exe, str(image_path), "stdout", "--psm", psm, "-l", languages]
+    def _run_tesseract(
+        self,
+        exe: str,
+        image_path: Path,
+        languages: str,
+        *,
+        psm: str,
+        cancel_event: Event | None = None,
+    ) -> str:
+        process = None
         try:
-            completed = subprocess.run(
-                command,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                timeout=60.0,
-                env=self.tesseract.runtime_env(),
-                creationflags=CREATE_NO_WINDOW,
-            )
+            # Ask Tesseract to write its renderer output to a private file.
+            # This avoids anonymous/inheritable stdio handles, which can fail
+            # under sandboxed Windows sessions (WinError 6/50), and cannot
+            # deadlock if Tesseract emits a large amount of text.
+            with tempfile.TemporaryDirectory(prefix="language-result-") as result_dir:
+                output_base = Path(result_dir) / "probe"
+                command = [exe, str(image_path), str(output_base), "--psm", psm, "-l", languages]
+                process = subprocess.Popen(
+                    command,
+                    env=self.tesseract.runtime_env(),
+                    creationflags=CREATE_NO_WINDOW,
+                )
+                deadline = time.monotonic() + 30.0
+                while True:
+                    self._check_cancel(cancel_event)
+                    try:
+                        process.wait(timeout=0.2)
+                        break
+                    except subprocess.TimeoutExpired:
+                        if time.monotonic() >= deadline:
+                            process.kill()
+                            process.wait()
+                            raise LanguageDetectionError("Tesseract language detection timed out after 30 seconds.")
+                        continue
+                output = ""
+                for result_path in (output_base.with_suffix(".txt"), output_base.with_suffix(".osd")):
+                    if result_path.is_file():
+                        output += result_path.read_text(encoding="utf-8", errors="replace") + "\n"
+        except DetectionCancelled:
+            if process is not None and process.poll() is None:
+                process.kill()
+                process.wait()
+            raise
         except (OSError, subprocess.SubprocessError) as exc:
             raise LanguageDetectionError(f"Tesseract detection probe failed: {exc}") from exc
-        output = (completed.stdout or "") + "\n" + (completed.stderr or "")
-        if completed.returncode != 0 and not output.strip():
+        if process.returncode != 0 and not output.strip():
             raise LanguageDetectionError("Tesseract returned no language detection result.")
         return output
 
@@ -355,11 +453,18 @@ class LanguageDetectionService:
             # against every compatible language in the bundled catalogue.
             # This is what allows Auto detect to return e.g. ``fra`` even
             # before French tessdata has been downloaded.
-            lingua_codes = list(self._catalog_lingua_codes())
-            scores = self._language_scores(clean, lingua_codes)
             vietnamese_marks = sum(character in _VIETNAMESE_MARKS for character in clean)
             if vietnamese_marks >= 2 and "vie" in probe_codes:
                 languages.append("vie")
+                confidence = max(confidence, min(0.82 + vietnamese_marks * 0.01, 0.95))
+            # Classifying a mixed Han/Latin OCR transcript as one block makes
+            # Lingua mistake Chinese vocabulary for Japanese and short lesson
+            # labels for unrelated Latin languages.  Vietnamese diacritics are
+            # stronger direct evidence than that statistical guess.  For other
+            # pages, remove CJK before classifying the Latin portion.
+            lingua_text = _CJK_RE.sub(" ", clean) if cjk_count else clean
+            lingua_codes = list(self._catalog_lingua_codes())
+            scores = {} if vietnamese_marks >= 2 else self._language_scores(lingua_text, lingua_codes)
             if scores:
                 ranked = sorted(scores.items(), key=lambda item: item[1], reverse=True)
                 top_code, top_score = ranked[0]
@@ -372,7 +477,7 @@ class LanguageDetectionService:
                 if top_score < 0.62 or top_score - second_score < 0.12:
                     candidates.extend(code for code, _score in ranked[:3])
             else:
-                confidence = 0.0
+                confidence = max(confidence, 0.0)
             if not languages and "latin" in script_key and len(probe_codes) == 1:
                 languages.append(probe_codes[0])
         else:
@@ -429,6 +534,11 @@ class LanguageDetectionService:
         for model in self.tesseract.catalog_models():
             if not model.is_language:
                 continue
+            # CJK languages are resolved by script/character heuristics.
+            # Feeding Han text to Lingua can confuse Chinese and Japanese, and
+            # Lingua cannot distinguish Simplified from Traditional Chinese.
+            if model.code in {"chi_sim", "chi_tra", "jpn", "kor"}:
+                continue
             iso3 = {"chi_sim": "zho", "chi_tra": "zho"}.get(model.code, model.code)
             if iso3 in supported:
                 codes.append(model.code)
@@ -474,7 +584,7 @@ class LanguageDetectionService:
     @staticmethod
     def _cache_key(path: Path) -> str:
         stat = path.stat()
-        value = f"v1|{path.resolve()}|{stat.st_size}|{stat.st_mtime_ns}"
+        value = f"v3|{path.resolve()}|{stat.st_size}|{stat.st_mtime_ns}"
         return hashlib.sha256(value.encode("utf-8", errors="replace")).hexdigest()
 
     @staticmethod
@@ -501,5 +611,13 @@ class LanguageDetectionService:
     def _combine(page_results: list[PageDetection]) -> DocumentDetection:
         languages = list(dict.fromkeys(code for page in page_results for code in page.languages))
         candidates = list(dict.fromkeys(code for page in page_results for code in page.candidates))
+        simplified_votes = sum("chi_sim" in page.languages for page in page_results)
+        traditional_votes = sum("chi_tra" in page.languages for page in page_results)
+        if simplified_votes > traditional_votes:
+            languages = [code for code in languages if code != "chi_tra"]
+            candidates = [code for code in candidates if code not in {"chi_sim", "chi_tra"}]
+        elif traditional_votes > simplified_votes:
+            languages = [code for code in languages if code != "chi_sim"]
+            candidates = [code for code in candidates if code not in {"chi_sim", "chi_tra"}]
         confidence = min((page.confidence for page in page_results), default=0.0)
         return DocumentDetection(tuple(languages), confidence, tuple(page_results), tuple(candidates))

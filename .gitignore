@@ -10,6 +10,9 @@ build-*/
 dist-*/
 *.spec
 .pytest_cache/
+.pytest-tmp-*/
+.frozen-smoke*/
+.*test-appdata*/
 .coverage
 htmlcov/
 .tox/

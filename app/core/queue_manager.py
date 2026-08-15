@@ -133,7 +133,7 @@ class QueueManager(QObject):
             self._maybe_start_next()
 
     def remove_job(self, job: Job) -> None:
-        if job.status == JobStatus.PROCESSING:
+        if job.status in (JobStatus.PREPARING, JobStatus.PROCESSING):
             return
         if job in self._jobs:
             self._jobs.remove(job)
@@ -148,7 +148,52 @@ class QueueManager(QObject):
         return list(self._jobs)
 
     def has_pending(self) -> bool:
-        return any(j.status == JobStatus.WAITING for j in self._jobs) or bool(self._job_by_process)
+        return any(j.status in (JobStatus.WAITING, JobStatus.PREPARING) for j in self._jobs) or bool(
+            self._job_by_process
+        )
+
+    def begin_preparation(self, jobs: list[Job], stage: str = "Preparing languages") -> None:
+        """Make language preflight visible in queue rows before OCR starts."""
+        for job in jobs:
+            if job.status != JobStatus.WAITING:
+                continue
+            job.set_status(JobStatus.PREPARING)
+            job.stage = stage
+            job.progress_current = 0
+            job.progress_total = job.page_count or 0
+            job.error_message = ""
+            job.error_detail = ""
+            self.job_updated.emit(job)
+
+    def update_preparation(self, job: Job, stage: str, current: int = 0, total: int = 0) -> None:
+        if job.status != JobStatus.PREPARING:
+            return
+        job.stage = stage
+        job.progress_current = max(0, int(current))
+        if total:
+            job.progress_total = max(0, int(total))
+        self.job_updated.emit(job)
+
+    def finish_preparation(self, jobs: list[Job]) -> None:
+        for job in jobs:
+            if job.status == JobStatus.PREPARING:
+                job.set_status(JobStatus.WAITING)
+                job.stage = ""
+                job.progress_current = 0
+                job.progress_total = job.page_count or 0
+                self.job_updated.emit(job)
+
+    def fail_preparation(self, jobs: list[Job], message: str, detail: str = "") -> None:
+        for job in jobs:
+            if job.status != JobStatus.PREPARING:
+                continue
+            job.set_status(JobStatus.FAILED)
+            job.stage = ""
+            job.error_message = message
+            job.error_detail = detail
+            self.job_finished.emit(job)
+            self.job_updated.emit(job)
+        self.queue_progress.emit(self._finished_count(), len(self._jobs))
 
     def is_running(self) -> bool:
         return self._running

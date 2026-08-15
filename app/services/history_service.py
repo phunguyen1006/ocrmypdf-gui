@@ -21,6 +21,8 @@ class HistoryEntry:
     mode: str = ""
     date: float = field(default_factory=time.time)
     settings_json: str = ""
+    error_message: str = ""
+    error_detail: str = ""
 
     def to_dict(self) -> dict:
         return {
@@ -33,6 +35,8 @@ class HistoryEntry:
             "mode": self.mode,
             "date": self.date,
             "settings_json": self.settings_json,
+            "error_message": self.error_message,
+            "error_detail": self.error_detail,
         }
 
 
@@ -47,7 +51,9 @@ CREATE TABLE IF NOT EXISTS history (
     languages TEXT DEFAULT '',
     mode TEXT DEFAULT '',
     date REAL NOT NULL,
-    settings_json TEXT DEFAULT ''
+    settings_json TEXT DEFAULT '',
+    error_message TEXT DEFAULT '',
+    error_detail TEXT DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS idx_history_date ON history(date DESC);
 """
@@ -63,12 +69,17 @@ class HistoryService:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         with sqlite3.connect(self.db_path) as conn:
             conn.executescript(_SCHEMA)
+            columns = {row[1] for row in conn.execute("PRAGMA table_info(history)")}
+            for name in ("error_message", "error_detail"):
+                if name not in columns:
+                    conn.execute(f"ALTER TABLE history ADD COLUMN {name} TEXT DEFAULT ''")
 
     def add(self, entry: HistoryEntry) -> None:
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
                 "INSERT INTO history (input, output, status, pages, duration_seconds,"
-                " languages, mode, date, settings_json) VALUES (?,?,?,?,?,?,?,?,?)",
+                " languages, mode, date, settings_json, error_message, error_detail)"
+                " VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                 (
                     entry.input,
                     entry.output,
@@ -79,13 +90,16 @@ class HistoryService:
                     entry.mode,
                     entry.date,
                     entry.settings_json,
+                    entry.error_message,
+                    entry.error_detail,
                 ),
             )
 
     def recent(self, limit: int = 100) -> list[HistoryEntry]:
         with sqlite3.connect(self.db_path) as conn:
             rows = conn.execute(
-                "SELECT input, output, status, pages, duration_seconds, languages, mode, date, settings_json"
+                "SELECT input, output, status, pages, duration_seconds, languages, mode, date, settings_json,"
+                " error_message, error_detail"
                 " FROM history ORDER BY date DESC LIMIT ?",
                 (limit,),
             ).fetchall()
@@ -121,4 +135,6 @@ class HistoryService:
             languages=langs,
             mode=settings.get("ocr_mode", ""),
             settings_json=job.settings_json,
+            error_message=job.error_message,
+            error_detail=job.error_detail,
         )

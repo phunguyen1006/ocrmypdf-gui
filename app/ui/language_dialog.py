@@ -55,12 +55,18 @@ class LanguagePickerDialog(QDialog):
 
         self.filter_combo = QComboBox()
         self.filter_combo.addItem("All", "all")
+        self.filter_combo.addItem("Selected", "selected")
         self.filter_combo.addItem("Installed", "Installed")
         self.filter_combo.addItem("Cached", "Cached")
         self.filter_combo.addItem("Available", "Available")
         self.filter_combo.setAccessibleName("Language status filter")
         self.filter_combo.currentIndexChanged.connect(self._refresh_list)
         root.addWidget(self.filter_combo)
+
+        self.selected_label = QLabel("")
+        self.selected_label.setObjectName("mutedLabel")
+        self.selected_label.setAccessibleName("Selected OCR language count")
+        root.addWidget(self.selected_label)
 
         self.list_widget = QListWidget()
         self.list_widget.setObjectName("languageList")
@@ -86,7 +92,9 @@ class LanguagePickerDialog(QDialog):
             haystack = f"{model.name} {model.code}".casefold()
             if query and query not in haystack:
                 continue
-            if status_filter != "all" and status != status_filter:
+            if status_filter == "selected" and model.code not in self._selected_codes:
+                continue
+            if status_filter not in ("all", "selected") and status != status_filter:
                 continue
             item = QListWidgetItem(f"{model.name}  ({model.code})  —  {status}")
             item.setData(Qt.ItemDataRole.UserRole, model.code)
@@ -97,6 +105,7 @@ class LanguagePickerDialog(QDialog):
             )
             self.list_widget.addItem(item)
         self.list_widget.blockSignals(False)
+        self._update_selected_summary()
 
     def _remember_item(self, item: QListWidgetItem) -> None:
         code = item.data(Qt.ItemDataRole.UserRole)
@@ -106,6 +115,17 @@ class LanguagePickerDialog(QDialog):
             self._selected_codes.add(str(code))
         else:
             self._selected_codes.discard(str(code))
+        self._update_selected_summary()
+
+    def _update_selected_summary(self) -> None:
+        count = len(self._selected_codes)
+        if count:
+            codes = ", ".join(
+                model.code for model, _status in self._models if model.code in self._selected_codes
+            )
+            self.selected_label.setText(f"Selected: {count} — {codes}")
+        else:
+            self.selected_label.setText("Selected: 0 — choose at least one language")
 
     def selected_codes(self) -> list[str]:
         for index in range(self.list_widget.count()):
