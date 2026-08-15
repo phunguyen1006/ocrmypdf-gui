@@ -4,8 +4,13 @@ from pathlib import Path
 
 import pytest
 
-from app.core.ocr_options import build_options, languages_for_settings, preset_overrides
-from app.models.settings import AppSettings, OcrPreset
+from app.core.ocr_options import (
+    build_options,
+    effective_settings_for_document,
+    languages_for_settings,
+    preset_overrides,
+)
+from app.models.settings import AppSettings, OcrMode, OcrPreset
 
 
 def test_languages_for_settings() -> None:
@@ -39,9 +44,19 @@ def test_build_options_uses_real_ocrmypdf_api(tmp_path: Path, monkeypatch) -> No
     )
     assert selected_work == work
     assert options.languages == ["eng"]
-    assert options.pages == {1, 2}
+    assert options.pages == {0, 1}
     assert options.tesseract_timeout is None
     assert options.output_type == "auto"
+
+
+def test_image_scan_with_incidental_text_uses_redo_instead_of_skip() -> None:
+    requested = AppSettings(ocr_mode=OcrMode.SKIP.value)
+
+    effective = effective_settings_for_document(requested, has_text=False)
+
+    assert effective.ocr_mode == OcrMode.REDO.value
+    assert requested.ocr_mode == OcrMode.SKIP.value
+    assert effective_settings_for_document(requested, has_text=True).ocr_mode == OcrMode.SKIP.value
 
 
 def test_difficult_preset_uses_ocrmypdf_oversample_value(tmp_path: Path) -> None:

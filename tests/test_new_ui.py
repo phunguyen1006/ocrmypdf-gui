@@ -80,13 +80,20 @@ def test_start_snapshot_uses_language_selected_after_file_was_added(qapp, tmp_pa
     window = MainWindow(store=store, history=HistoryService(tmp_path / "history.db"))
     pdf = tmp_path / "book.pdf"
     pdf.write_bytes(b"%PDF-1.4\n%%EOF")
-    job = Job(str(pdf), settings_json=AppSettings(language_preset="auto").to_json(), page_count=1)
+    job = Job(
+        str(pdf),
+        settings_json=AppSettings(language_preset="auto").to_json(),
+        page_count=1,
+        has_text=False,
+    )
     window.queue.enqueue([job])
 
     window.lang_combo.setCurrentIndex(window.lang_combo.findData("chi_sim+vie"))
     snapshot = window._snapshot_settings()
     assert window._apply_current_settings_to_waiting([job], snapshot)
-    assert json.loads(job.settings_json)["language_preset"] == "chi_sim+vie"
+    saved_job_settings = json.loads(job.settings_json)
+    assert saved_job_settings["language_preset"] == "chi_sim+vie"
+    assert saved_job_settings["ocr_mode"] == "redo"
     window.queue.remove_job(job)
     window.close()
 

@@ -8,6 +8,7 @@ chọn ngôn ngữ và nhận một PDF có thể tìm kiếm, chọn và sao ch
 - Kéo thả một hoặc nhiều PDF; kéo cả thư mục để thêm các PDF bên trong.
 - Queue theo từng file, không chạy OCR trên GUI thread.
 - OCR chạy trong process riêng, có progress theo stage, ETA, log và Cancel.
+- Image scans có watermark/text vụn tự chuyển từ Skip sang Redo OCR; app kiểm tra text layer trước khi báo hoàn tất.
 - Ngôn ngữ tiếng Việt, tiếng Anh, toàn bộ catalogue Tesseract và lựa chọn custom.
 - Auto detect ngôn ngữ thích ứng: mọi trang với PDF ngắn, các trang đại diện với PDF dài; lazy-download model và cache trong app data.
 - Preset Quick, Standard và Difficult Scan.

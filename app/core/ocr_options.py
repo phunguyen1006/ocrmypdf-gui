@@ -21,6 +21,20 @@ from app.models.settings import (
 from app.utils.paths import make_work_dir, unique_output_path
 
 
+def effective_settings_for_document(settings: AppSettings, has_text: bool | None) -> AppSettings:
+    """Return job settings that cannot silently skip an image scan.
+
+    Scanned books often contain a tiny visible watermark or URL text layer.
+    OCRmyPDF's ``skip`` mode treats that as a searchable page and skips the
+    page image completely.  The GUI's inspector already classifies those
+    documents as image scans, so use ``redo`` for that specific combination.
+    """
+    effective = AppSettings.from_dict(settings.to_dict())
+    if effective.ocr_mode == OcrMode.SKIP.value and has_text is False:
+        effective.ocr_mode = OcrMode.REDO.value
+    return effective
+
+
 def languages_for_settings(settings: AppSettings) -> list[str]:
     """Resolve the language preset into a list of tessdata language codes."""
     if settings.language_preset == LanguagePreset.AUTO.value:
@@ -123,7 +137,9 @@ def build_options(
     if settings.jobs == 0:
         jobs = None  # ocrmypdf default
 
-    page_value = set(pages) if pages is not None else None
+    # OcrOptions uses zero-based page indexes; the GUI and Job model use
+    # human-friendly one-based page numbers.
+    page_value = {page - 1 for page in pages if page >= 1} if pages is not None else None
     timeout_value = float(timeout) if timeout > 0 else None
 
     if work_folder is None:

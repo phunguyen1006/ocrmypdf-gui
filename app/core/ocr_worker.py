@@ -29,7 +29,12 @@ from typing import Any
 from ocrmypdf import ExitCode
 
 from app.core import progress
-from app.core.ocr_options import build_options, estimate_job_work, resolve_output_path
+from app.core.ocr_options import (
+    build_options,
+    effective_settings_for_document,
+    estimate_job_work,
+    resolve_output_path,
+)
 from app.models.job import Job
 from app.models.settings import AppSettings
 from app.services import dependency_checker
@@ -198,6 +203,34 @@ def _cleanup_stale_tmp() -> None:
         pass
 
 
+def _text_character_count(pdf_path: Path, pages: list[int] | None = None) -> int | None:
+    """Count extractable characters for a lightweight post-OCR sanity check."""
+    try:
+        import pypdfium2 as pdfium
+
+        document = pdfium.PdfDocument(str(pdf_path))
+        selected = pages if pages is not None else list(range(1, len(document) + 1))
+        total = 0
+        try:
+            for page_number in selected:
+                if page_number < 1 or page_number > len(document):
+                    continue
+                page = document.get_page(page_number - 1)
+                text_page = page.get_textpage()
+                try:
+                    text = text_page.get_text_range() or ""
+                    total += sum(not character.isspace() for character in text)
+                finally:
+                    text_page.close()
+                    page.close()
+        finally:
+            document.close()
+        return total
+    except Exception as exc:  # noqa: BLE001 - QA must not break a valid OCR run
+        log.warning("Could not verify the PDF text layer: %s", exc)
+        return None
+
+
 def _publish_staged_file(staged_path: Path, final_path: Path, token: str) -> None:
     """Publish a completed artifact without assuming both paths share a drive.
 
@@ -242,6 +275,12 @@ def _publish_staged_file(staged_path: Path, final_path: Path, token: str) -> Non
 def run_ocr_job(job: Job, settings: AppSettings) -> int:
     """Execute one OCR job. Returns a process exit code (0 on success)."""
     input_path = Path(job.input_path)
+    requested_mode = settings.ocr_mode
+    settings = effective_settings_for_document(settings, job.has_text)
+    if requested_mode != settings.ocr_mode:
+        log.warning(
+            "Image scan contains incidental text; using Redo OCR so watermark text does not skip every page."
+        )
     output_path = Path(job.output_path) if job.output_path else resolve_output_path(input_path, settings)
 
     if not input_path.exists() or not input_path.is_file():
@@ -266,6 +305,7 @@ def run_ocr_job(job: Job, settings: AppSettings) -> int:
         progress.emit_skipped("No pages were selected for OCR.")
         return 0
 
+    before_text_count = _text_character_count(input_path, job.pages) if job.has_text is False else None
     work_dir: Path | None = None
     final_sidecar_path: Path | None = None
     staged_output_path: Path | None = None
@@ -386,6 +426,18 @@ def run_ocr_job(job: Job, settings: AppSettings) -> int:
         )
         _cleanup_work_dir(work_dir)
         return 1
+
+    if before_text_count is not None:
+        after_text_count = _text_character_count(staged_output_path, job.pages)
+        if after_text_count is not None and after_text_count <= before_text_count + 5:
+            progress.emit_failed(
+                "OCR finished but did not add searchable text. Try Force OCR or check the selected languages.",
+                "NoTextAddedError",
+                None,
+                f"Extractable characters before: {before_text_count}; after: {after_text_count}.",
+            )
+            _cleanup_work_dir(work_dir)
+            return 1
 
     # OCRmyPDF writes into the per-job work folder. Only publish the final PDF
     # after the pipeline has succeeded, so a crash cannot corrupt the user's

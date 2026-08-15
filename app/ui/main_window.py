@@ -35,7 +35,7 @@ from app.core.page_ranges import (
     parse_spec_to_pages,
     validate_spec,
 )
-from app.core.ocr_options import resolve_output_path
+from app.core.ocr_options import effective_settings_for_document, resolve_output_path
 from app.models.job import Job, JobStatus
 from app.models.settings import AppSettings, OcrPreset, SettingsStore
 from app.services import dependency_checker
@@ -479,6 +479,10 @@ class MainWindow(QMainWindow):
         Selecting Chinese + Vietnamese afterwards therefore had no effect and
         arbitrary catalogue codes were decoded back to Auto detect.
         """
+        try:
+            selected_settings = AppSettings.from_dict(json.loads(snapshot))
+        except (json.JSONDecodeError, TypeError):
+            selected_settings = self.settings
         waiting_ids = {job.id for job in waiting}
         reserved_outputs = [
             job.output_path
@@ -490,7 +494,8 @@ class MainWindow(QMainWindow):
             if not valid:
                 return False
             job.pages = pages
-            job.settings_json = snapshot
+            job_settings = effective_settings_for_document(selected_settings, job.has_text)
+            job.settings_json = job_settings.to_json()
             job.output_path = str(
                 resolve_output_path(job.input, self.settings, reserved_paths=reserved_outputs)
             )

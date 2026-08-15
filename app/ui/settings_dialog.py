@@ -88,12 +88,17 @@ class SettingsDialog(QDialog):
         form = QFormLayout(ocr_box)
 
         self.mode_combo = QComboBox()
-        for mode in (OcrMode.SKIP, OcrMode.REDO, OcrMode.FORCE):
-            self.mode_combo.addItem(mode.value, mode.value)
+        for label, mode in (
+            ("Skip pages with text", OcrMode.SKIP),
+            ("Redo existing OCR", OcrMode.REDO),
+            ("Force rasterize and OCR", OcrMode.FORCE),
+        ):
+            self.mode_combo.addItem(label, mode.value)
         self.mode_combo.setToolTip(
             "Skip existing text: OCR only pages that have no text yet (fastest).\n"
             "Redo OCR: replace the old text layer.\n"
-            "Force OCR: rasterize pages and OCR them again."
+            "Force OCR: rasterize pages and OCR them again.\n"
+            "Image scans with only watermark text automatically use Redo OCR."
         )
         form.addRow("OCR Mode:", self.mode_combo)
 
